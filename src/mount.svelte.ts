@@ -9,7 +9,9 @@ export function mount(target: string | Element, options: MountOptions = {}): Cle
   const component = svelteMount(Clef, { target: element, props });
   return {
     update(next: MountOptions) {
-      props.options = next;
+      // merge, not replace: swapping the options object would retrigger the
+      // document-load effect even for theme-only updates
+      Object.assign(props.options, next);
     },
     destroy() {
       unmount(component);

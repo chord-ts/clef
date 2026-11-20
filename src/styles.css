@@ -80,6 +80,16 @@
   }
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .clef,
+  .clef * {
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      color 200ms ease;
+  }
+}
+
 .clef ::selection {
   background: color-mix(in srgb, var(--clef-accent) 25%, transparent);
 }

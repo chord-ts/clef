@@ -91,7 +91,12 @@
   );
 
   $effect(() => {
-    const source = options;
+    const source = {
+      spec: options.spec,
+      url: options.url,
+      endpoint: options.endpoint,
+      transport: options.transport
+    };
     const token = ++loadToken;
     loading = true;
     loadError = null;
@@ -150,8 +155,9 @@
             title="Expand sidebar"
             aria-label="Expand sidebar"
           >
-            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-              <path d="M7.5 3.5L12 8l-4.5 4.5M3.5 3.5L8 8l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
+              <rect x="1.75" y="2.75" width="12.5" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+              <path d="M5.75 2.75v10.5" fill="none" stroke="currentColor" stroke-width="1.5" />
             </svg>
           </button>
         </div>

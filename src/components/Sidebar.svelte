@@ -49,9 +49,19 @@
 <aside class="sidebar">
   <header class="head">
     <div class="title-row">
-      <h1>{doc.info.title}</h1>
-      <span class="version">v{doc.info.version}</span>
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 16 16" width="16" height="16">
+          <path d="M6.2 12.2V3.6l7.2-1.5v8.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+          <ellipse cx="4.1" cy="12.2" rx="2.2" ry="1.7" fill="currentColor" />
+          <ellipse cx="11.3" cy="10.7" rx="2.2" ry="1.7" fill="currentColor" />
+        </svg>
+      </div>
+      <div class="title-text">
+        <h1>{doc.info.title}</h1>
+        <span class="version">v{doc.info.version}</span>
+      </div>
     </div>
+    {#if doc.info.description}<p class="desc">{doc.info.description}</p>{/if}
     <button
       type="button"
       class="collapse"
@@ -59,11 +69,12 @@
       title="Collapse sidebar"
       aria-label="Collapse sidebar"
     >
-      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-        <path d="M8.5 3.5L4 8l4.5 4.5M12.5 3.5L8 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+      <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
+        <path d="M5.75 2.75H3.75a2 2 0 0 0-2 2v6.5a2 2 0 0 0 2 2h2z" fill="currentColor" fill-opacity="0.35" />
+        <rect x="1.75" y="2.75" width="12.5" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <path d="M5.75 2.75v10.5" fill="none" stroke="currentColor" stroke-width="1.5" />
       </svg>
     </button>
-    {#if doc.info.description}<p class="desc">{doc.info.description}</p>{/if}
   </header>
 
   <div class="search">
@@ -106,7 +117,7 @@
     {#if total === 0}<p class="empty">Nothing found for “{query}”.</p>{/if}
   </nav>
 
-  <footer class="foot">OpenRPC {doc.openrpc} · rendered by <span class="brand">clef</span></footer>
+  <footer class="foot">OpenRPC {doc.openrpc} · rendered by <span class="brand">Clef</span></footer>
 </aside>
 
 <style>
@@ -123,47 +134,80 @@
 
   .head {
     position: relative;
-    padding: 20px 48px 12px 20px;
+    padding: 18px 48px 16px 18px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--clef-accent) 6%, var(--clef-bg-soft)),
+      var(--clef-bg-soft)
+    );
+    border-bottom: 1px solid var(--clef-border);
   }
 
   .title-row {
     display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .mark {
+    flex-shrink: 0;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    color: var(--clef-on-accent);
+    background: linear-gradient(135deg, var(--clef-accent), color-mix(in srgb, var(--clef-accent) 75%, #000));
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.14),
+      inset 0 1px 0 rgb(255 255 255 / 0.18);
+  }
+
+  .title-text {
+    min-width: 0;
+    padding-top: 1px;
   }
 
   h1 {
     margin: 0;
     font-size: 17px;
-    font-weight: 650;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    overflow-wrap: anywhere;
   }
 
   .version {
+    display: inline-block;
+    margin-top: 5px;
     font-family: var(--clef-mono);
-    font-size: 11px;
-    color: var(--clef-muted);
-    border: 1px solid var(--clef-border);
+    font-size: 10.5px;
+    letter-spacing: 0.02em;
+    color: var(--clef-accent);
+    background: var(--clef-accent-soft);
     border-radius: 999px;
-    padding: 1px 8px;
-    background: var(--clef-bg);
+    padding: 2px 8px;
   }
 
   .collapse {
     position: absolute;
-    top: 16px;
+    top: 21px;
     right: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     border: none;
     border-radius: 6px;
     background: transparent;
     color: var(--clef-muted);
     cursor: pointer;
+    transition:
+      transform 160ms var(--clef-ease-out),
+      background-color 150ms ease,
+      color 150ms ease;
   }
 
   .collapse:hover {
@@ -174,6 +218,7 @@
   .desc {
     margin: 8px 0 0;
     font-size: 12.5px;
+    line-height: 1.5;
     color: var(--clef-muted);
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -183,7 +228,7 @@
   }
 
   .search {
-    padding: 0 16px 12px;
+    padding: 12px 16px;
   }
 
   .search input {

@@ -4,6 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>clef — dev demo (vite)</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%230d9488'/%3E%3Cpath d='M6.2 12.2V3.6l7.2-1.5v8.6' fill='none' stroke='white' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cellipse cx='4.1' cy='12.2' rx='2.2' ry='1.7' fill='white'/%3E%3Cellipse cx='11.3' cy='10.7' rx='2.2' ry='1.7' fill='white'/%3E%3C/svg%3E"
+    />
     <style>
       html,
       body {
@@ -11,6 +15,8 @@
         margin: 0;
       }
       body {
+        display: flex;
+        flex-direction: column;
         font-family: system-ui, sans-serif;
         background: #f2f3f7;
       }
@@ -19,65 +25,273 @@
         gap: 12px;
         align-items: center;
         padding: 10px 16px;
-        background: #10131a;
+        background: linear-gradient(180deg, #151a24, #10131a);
+        border-bottom: 1px solid #262e3d;
         color: #e7eaf0;
         font-size: 13px;
         flex-wrap: wrap;
       }
-      .toolbar strong {
-        font-size: 14px;
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
       }
-      .toolbar .spacer {
+      .brand-mark {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        color: #062a26;
+        background: linear-gradient(135deg, #2dd4bf, #0d9488);
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25);
+      }
+      .brand strong {
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+      .badge {
+        font-size: 11px;
+        color: #98a2b8;
+        background: #1c2230;
+        border: 1px solid #262e3d;
+        border-radius: 999px;
+        padding: 2px 9px;
+      }
+      .hint {
+        color: #98a2b8;
+        font-size: 12px;
+      }
+      .hint code {
+        font-size: 11px;
+        background: #1c2230;
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+      .spacer {
         flex: 1;
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
       }
       .toolbar label {
         display: flex;
-        gap: 6px;
+        gap: 7px;
         align-items: center;
         color: #98a2b8;
+        font-size: 12px;
       }
-      .toolbar select,
-      .toolbar button {
+      .toolbar select {
         font: inherit;
-        padding: 4px 10px;
-        border-radius: 6px;
+        font-size: 12.5px;
+        appearance: none;
+        padding: 5px 26px 5px 10px;
+        border-radius: 7px;
+        border: 1px solid #3a4152;
+        background: #1c2230
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%2398a2b8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+          no-repeat right 8px center / 10px;
+        color: #e7eaf0;
+        cursor: pointer;
+        transition:
+          border-color 150ms ease,
+          box-shadow 150ms ease;
+      }
+      .toolbar select:hover {
+        border-color: #4a5266;
+      }
+      .toolbar select:focus-visible {
+        outline: none;
+        border-color: #2dd4bf;
+        box-shadow: 0 0 0 3px rgb(45 212 191 / 0.18);
+      }
+      .theme-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
         border: 1px solid #3a4152;
         background: #1c2230;
-        color: inherit;
+        color: #e7eaf0;
         cursor: pointer;
+        transition:
+          transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+          border-color 150ms ease,
+          background-color 150ms ease;
+      }
+      .theme-toggle:hover {
+        border-color: #4a5266;
+        background: #232a3a;
+      }
+      .theme-toggle:active {
+        transform: scale(0.94);
+      }
+      .theme-toggle:focus-visible {
+        outline: none;
+        border-color: #2dd4bf;
+        box-shadow: 0 0 0 3px rgb(45 212 191 / 0.18);
+      }
+      .theme-toggle .sun-core,
+      .theme-toggle .beams {
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .theme-toggle .sun-core,
+      .theme-toggle .moon-cut {
+        transition:
+          transform 300ms cubic-bezier(0.23, 1, 0.32, 1),
+          opacity 200ms ease;
+      }
+      .theme-toggle .auto-glyph {
+        transform-box: fill-box;
+        transform-origin: center;
+        opacity: 0;
+        transform: rotate(-45deg);
+        transition:
+          transform 300ms cubic-bezier(0.23, 1, 0.32, 1),
+          opacity 200ms ease;
+      }
+      .theme-toggle .beams {
+        transition:
+          transform 300ms cubic-bezier(0.23, 1, 0.32, 1),
+          opacity 200ms ease;
+      }
+      .theme-toggle[data-mode='dark'] .sun-core {
+        transform: scale(1.5);
+      }
+      .theme-toggle[data-mode='dark'] .moon-cut {
+        transform: translateX(-7px);
+      }
+      .theme-toggle[data-mode='dark'] .beams {
+        transform: rotate(-25deg);
+        opacity: 0;
+      }
+      .theme-toggle[data-mode='auto'] .sun-core {
+        opacity: 0;
+      }
+      .theme-toggle[data-mode='auto'] .auto-glyph {
+        opacity: 1;
+        transform: rotate(0deg);
+      }
+      .theme-toggle[data-mode='auto'] .beams {
+        transform: rotate(-25deg);
+        opacity: 0;
       }
       #app {
-        height: calc(100% - 46px);
+        flex: 1;
+        min-height: 0;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .toolbar select,
+        .theme-toggle,
+        .theme-toggle * {
+          transition: none;
+        }
+        .theme-toggle:active {
+          transform: none;
+        }
       }
     </style>
   </head>
   <body>
     <div class="toolbar">
-      <strong>clef</strong>
-      <span>dev demo — run <code>pnpm demo:server</code> for live requests</span>
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 16 16" width="13" height="13">
+            <path d="M6.2 12.2V3.6l7.2-1.5v8.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+            <ellipse cx="4.1" cy="12.2" rx="2.2" ry="1.7" fill="currentColor" />
+            <ellipse cx="11.3" cy="10.7" rx="2.2" ry="1.7" fill="currentColor" />
+          </svg>
+        </span>
+        <strong>clef</strong>
+        <span class="badge">dev demo</span>
+      </div>
+      <span class="hint">run <code>pnpm demo:server</code> for live requests</span>
       <span class="spacer"></span>
-      <label
-        >theme
-        <select id="theme">
-          <option value="auto">auto</option>
-          <option value="light">light</option>
-          <option value="dark">dark</option>
-        </select>
-      </label>
+      <div class="controls">
+        <button
+          id="theme"
+          type="button"
+          class="theme-toggle"
+          data-mode="auto"
+          title="Theme: auto — switch to light"
+          aria-label="Theme: auto. Switch to light"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <mask id="theme-mask">
+              <rect width="24" height="24" fill="white" />
+              <circle class="moon-cut" cx="24" cy="10" r="6" fill="black" />
+            </mask>
+            <mask id="auto-moon-mask">
+              <rect width="24" height="24" fill="white" />
+              <circle cx="9.5" cy="9.5" r="4.5" fill="black" />
+            </mask>
+            <circle class="sun-core" cx="12" cy="12" r="6" fill="currentColor" mask="url(#theme-mask)" />
+            <g class="auto-glyph">
+              <g transform="translate(24 0) scale(-1 1)">
+                <g transform="translate(-0.7 0.7)">
+                  <path d="M7.76 7.76A6 6 0 0 0 16.24 16.24Z" fill="currentColor" />
+                  <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="4" y1="12" x2="2" y2="12" />
+                    <line x1="12" y1="20" x2="12" y2="22" />
+                    <line x1="6.34" y1="17.66" x2="4.93" y2="19.07" />
+                  </g>
+                </g>
+                <path
+                  d="M6.7 6.7A7.5 7.5 0 0 1 17.3 17.3Z"
+                  transform="translate(0.7 -0.7)"
+                  fill="currentColor"
+                  mask="url(#auto-moon-mask)"
+                />
+              </g>
+            </g>
+            <g class="beams" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </g>
+          </svg>
+        </button>
+      </div>
     </div>
     <div id="app"></div>
 
     <script type="module">
       import { mount } from '/src/index.ts';
 
-      const themeSel = document.getElementById('theme');
+      const themeBtn = document.getElementById('theme');
+      const modes = ['auto', 'light', 'dark'];
+      let theme = 'auto';
       const options = {
         url: 'http://localhost:4000/openrpc.json',
         endpoint: 'http://localhost:4000/rpc',
-        theme: themeSel.value
+        theme
       };
       const handle = mount('#app', options);
-      themeSel.addEventListener('change', () => handle.update({ ...options, theme: themeSel.value }));
+      function applyTheme() {
+        themeBtn.dataset.mode = theme;
+        const next = modes[(modes.indexOf(theme) + 1) % modes.length];
+        themeBtn.title = `Theme: ${theme} — switch to ${next}`;
+        themeBtn.setAttribute('aria-label', `Theme: ${theme}. Switch to ${next}`);
+        handle.update({ ...options, theme });
+      }
+      themeBtn.addEventListener('click', () => {
+        theme = modes[(modes.indexOf(theme) + 1) % modes.length];
+        applyTheme();
+      });
+      applyTheme();
     </script>
   </body>
 </html>
