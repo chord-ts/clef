@@ -1,0 +1,57 @@
+{
+  "name": "@chord-ts/clef",
+  "version": "0.1.0",
+  "description": "Embeddable OpenRPC reference & console — Swagger UI for JSON-RPC. One self-contained CDN file, Svelte 5 inside.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chord-ts/clef.git"
+  },
+  "keywords": [
+    "openrpc",
+    "json-rpc",
+    "api-reference",
+    "documentation",
+    "swagger",
+    "playground",
+    "svelte",
+    "cdn"
+  ],
+  "module": "./dist/clef.esm.js",
+  "types": "./dist/types/public.d.ts",
+  "unpkg": "./dist/clef.iife.js",
+  "jsdelivr": "./dist/clef.iife.js",
+  "exports": {
+    ".": {
+      "types": "./dist/types/public.d.ts",
+      "import": "./dist/clef.esm.js",
+      "default": "./dist/clef.iife.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "preview": "vite preview",
+    "demo:server": "node demo/server.mjs",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm check && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@types/ws": "^8.18.1",
+    "jsdom": "^31.0.1",
+    "svelte": "^5.59.1",
+    "svelte-check": "^4.7.8",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.8",
+    "vite-plugin-css-injected-by-js": "^5.0.3",
+    "vitest": "^5.1.1",
+    "ws": "^8.23.0"
+  }
+}

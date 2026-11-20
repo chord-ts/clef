@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>clef — dev demo (vite)</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        background: #f2f3f7;
+      }
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 16px;
+        background: #10131a;
+        color: #e7eaf0;
+        font-size: 13px;
+        flex-wrap: wrap;
+      }
+      .toolbar strong {
+        font-size: 14px;
+      }
+      .toolbar .spacer {
+        flex: 1;
+      }
+      .toolbar label {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        color: #98a2b8;
+      }
+      .toolbar select,
+      .toolbar button {
+        font: inherit;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid #3a4152;
+        background: #1c2230;
+        color: inherit;
+        cursor: pointer;
+      }
+      #app {
+        height: calc(100% - 46px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <strong>clef</strong>
+      <span>dev demo — run <code>pnpm demo:server</code> for live requests</span>
+      <span class="spacer"></span>
+      <label
+        >theme
+        <select id="theme">
+          <option value="auto">auto</option>
+          <option value="light">light</option>
+          <option value="dark">dark</option>
+        </select>
+      </label>
+    </div>
+    <div id="app"></div>
+
+    <script type="module">
+      import { mount } from '/src/index.ts';
+
+      const themeSel = document.getElementById('theme');
+      const options = {
+        url: 'http://localhost:4000/openrpc.json',
+        endpoint: 'http://localhost:4000/rpc',
+        theme: themeSel.value
+      };
+      const handle = mount('#app', options);
+      themeSel.addEventListener('change', () => handle.update({ ...options, theme: themeSel.value }));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,196 @@
+{
+  "openrpc": "1.3.2",
+  "info": {
+    "title": "Clef Demo Notes API",
+    "version": "1.2.0",
+    "description": "A tiny JSON-RPC notes service used to demo clef. Every method below can be executed live against the bundled demo server.",
+    "license": { "name": "MIT" }
+  },
+  "servers": [
+    { "name": "demo", "url": "http://localhost:4000/rpc", "summary": "Local demo server (HTTP + WebSocket)" }
+  ],
+  "methods": [
+    {
+      "name": "notes.list",
+      "summary": "List notes",
+      "description": "Returns notes, newest first. Optionally filter by tag and limit the page size.",
+      "tags": [{ "name": "notes" }],
+      "params": [
+        {
+          "name": "limit",
+          "description": "Maximum number of notes to return.",
+          "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+        },
+        {
+          "name": "tag",
+          "description": "Only notes carrying this tag.",
+          "schema": { "type": "string" }
+        }
+      ],
+      "result": {
+        "name": "notes",
+        "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Note" } }
+      },
+      "examples": [
+        {
+          "name": "firstTwo",
+          "summary": "The two seed notes",
+          "params": [{ "name": "limit", "value": 2 }],
+          "result": {
+            "name": "notes",
+            "value": [
+              {
+                "id": 2,
+                "title": "Try the console",
+                "body": "Pick a method on the left and press Execute.",
+                "tags": ["demo", "docs"],
+                "createdAt": "2026-11-20T09:05:00.000Z"
+              },
+              {
+                "id": 1,
+                "title": "Welcome to clef",
+                "body": "This note lives in the demo server memory.",
+                "tags": ["demo"],
+                "createdAt": "2026-11-20T09:00:00.000Z"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "notes.create",
+      "summary": "Create a note",
+      "tags": [{ "name": "notes" }],
+      "params": [
+        {
+          "name": "title",
+          "required": true,
+          "schema": { "type": "string", "minLength": 1, "maxLength": 120 }
+        },
+        { "name": "body", "schema": { "type": "string" } },
+        {
+          "name": "tags",
+          "schema": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+        }
+      ],
+      "result": { "name": "note", "schema": { "$ref": "#/components/schemas/Note" } },
+      "errors": [{ "code": -32602, "message": "Invalid params: title must be a non-empty string" }],
+      "examples": [
+        {
+          "name": "shopping",
+          "summary": "A note with tags",
+          "params": [
+            { "name": "title", "value": "Shopping list" },
+            { "name": "body", "value": "Milk, eggs, bread" },
+            { "name": "tags", "value": ["personal"] }
+          ],
+          "result": {
+            "name": "note",
+            "value": {
+              "id": 3,
+              "title": "Shopping list",
+              "body": "Milk, eggs, bread",
+              "tags": ["personal"],
+              "createdAt": "2026-11-20T10:00:00.000Z"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "notes.get",
+      "summary": "Get one note",
+      "tags": [{ "name": "notes" }],
+      "params": [{ "name": "id", "required": true, "schema": { "type": "integer" } }],
+      "result": { "name": "note", "schema": { "$ref": "#/components/schemas/Note" } },
+      "errors": [{ "code": -32001, "message": "Note not found" }]
+    },
+    {
+      "name": "notes.delete",
+      "summary": "Delete a note",
+      "tags": [{ "name": "notes" }],
+      "params": [{ "name": "id", "required": true, "schema": { "type": "integer" } }],
+      "result": { "name": "deleted", "schema": { "type": "boolean" } },
+      "errors": [{ "code": -32001, "message": "Note not found" }]
+    },
+    {
+      "name": "notes.export",
+      "summary": "Export all notes",
+      "description": "Exports the whole collection. The JSON format returns structured data, Markdown returns a rendered string.",
+      "tags": [{ "name": "notes" }],
+      "params": [
+        {
+          "name": "format",
+          "required": true,
+          "schema": { "type": "string", "enum": ["json", "markdown"], "default": "json" }
+        }
+      ],
+      "result": {
+        "name": "export",
+        "schema": {
+          "oneOf": [
+            { "type": "array", "title": "JSON export", "items": { "$ref": "#/components/schemas/Note" } },
+            { "type": "string", "title": "Markdown export" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "notes.clear",
+      "summary": "Delete all notes",
+      "deprecated": true,
+      "description": "Deprecated: delete notes individually with notes.delete instead.",
+      "tags": [{ "name": "notes" }],
+      "params": [],
+      "result": { "name": "count", "schema": { "type": "integer" } }
+    },
+    {
+      "name": "echo",
+      "summary": "Echo a message back",
+      "tags": [{ "name": "util" }],
+      "params": [
+        {
+          "name": "message",
+          "required": true,
+          "schema": { "type": "string", "examples": ["Hello, clef!"] }
+        }
+      ],
+      "result": { "name": "echoed", "schema": { "type": "string" } },
+      "examples": [
+        {
+          "name": "hello",
+          "params": [{ "name": "message", "value": "Hello, clef!" }],
+          "result": { "name": "echoed", "value": "Hello, clef!" }
+        }
+      ]
+    },
+    {
+      "name": "rpc.discover",
+      "summary": "Service discovery",
+      "description": "Returns this OpenRPC document. clef can load the spec straight from the endpoint via this method.",
+      "tags": [{ "name": "service" }],
+      "params": [],
+      "result": {
+        "name": "document",
+        "schema": { "type": "object", "description": "OpenRPC 1.x document" }
+      }
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Note": {
+        "type": "object",
+        "title": "Note",
+        "required": ["id", "title", "createdAt"],
+        "properties": {
+          "id": { "type": "integer", "description": "Server-assigned identifier." },
+          "title": { "type": "string" },
+          "body": { "type": ["string", "null"] },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

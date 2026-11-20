@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>clef — OpenRPC demo (built bundle)</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        background: #f2f3f7;
+      }
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 16px;
+        background: #10131a;
+        color: #e7eaf0;
+        font-size: 13px;
+        flex-wrap: wrap;
+      }
+      .toolbar strong {
+        font-size: 14px;
+      }
+      .toolbar .spacer {
+        flex: 1;
+      }
+      .toolbar label {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        color: #98a2b8;
+      }
+      .toolbar select,
+      .toolbar button {
+        font: inherit;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid #3a4152;
+        background: #1c2230;
+        color: inherit;
+        cursor: pointer;
+      }
+      #app {
+        height: calc(100% - 46px);
+      }
+      #app > clef-docs {
+        display: block;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <strong>clef</strong>
+      <span>built bundle demo</span>
+      <span class="spacer"></span>
+      <label
+        >source
+        <select id="source">
+          <option value="url">url (/openrpc.json)</option>
+          <option value="endpoint">endpoint (rpc.discover)</option>
+          <option value="inline">inline spec</option>
+          <option value="wc">&lt;clef-docs&gt; element</option>
+        </select>
+      </label>
+      <label
+        >theme
+        <select id="theme">
+          <option value="auto">auto</option>
+          <option value="light">light</option>
+          <option value="dark">dark</option>
+        </select>
+      </label>
+      <button id="remount">Remount</button>
+    </div>
+    <div id="app"></div>
+
+    <script src="/dist/clef.iife.js"></script>
+    <script>
+      const app = document.getElementById('app');
+      const sourceSel = document.getElementById('source');
+      const themeSel = document.getElementById('theme');
+      let handle = null;
+
+      async function remount() {
+        handle?.destroy();
+        handle = null;
+        app.innerHTML = '';
+        const theme = themeSel.value;
+        const endpoint = location.origin + '/rpc';
+        const source = sourceSel.value;
+
+        if (source === 'wc') {
+          const element = document.createElement('clef-docs');
+          element.setAttribute('url', location.origin + '/openrpc.json');
+          element.setAttribute('endpoint', endpoint);
+          element.setAttribute('theme', theme);
+          app.appendChild(element);
+          return;
+        }
+
+        const options = { endpoint, theme };
+        if (source === 'url') options.url = location.origin + '/openrpc.json';
+        if (source === 'inline') options.spec = await (await fetch('/openrpc.json')).json();
+        handle = clef.mount(app, options);
+      }
+
+      sourceSel.addEventListener('change', remount);
+      themeSel.addEventListener('change', remount);
+      document.getElementById('remount').addEventListener('click', remount);
+      remount();
+    </script>
+  </body>
+</html>

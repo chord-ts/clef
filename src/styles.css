@@ -1,0 +1,121 @@
+.clef {
+  --clef-bg: #ffffff;
+  --clef-bg-soft: #f6f7f9;
+  --clef-bg-inset: #eef0f4;
+  --clef-page: #e9ebf0;
+  --clef-border: #e4e7ec;
+  --clef-text: #1c2333;
+  --clef-muted: #61708a;
+  --clef-accent: #0d9488;
+  --clef-accent-soft: #e0f4f1;
+  --clef-on-accent: #ffffff;
+  --clef-danger: #dc2626;
+  --clef-danger-soft: #fef2f2;
+  --clef-ok: #16a34a;
+  --clef-ok-soft: #f0fdf4;
+  --clef-warn: #b45309;
+  --clef-warn-soft: #fffbeb;
+  --clef-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, 'Liberation Mono', monospace;
+  --clef-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --clef-radius: 10px;
+  --clef-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  font-family: var(--clef-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--clef-text);
+  background: var(--clef-page);
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+
+.clef[data-theme='dark'] {
+  --clef-bg: #0e1116;
+  --clef-bg-soft: #151a22;
+  --clef-bg-inset: #1c2230;
+  --clef-page: #0a0d11;
+  --clef-border: #262e3d;
+  --clef-text: #e7eaf0;
+  --clef-muted: #98a2b8;
+  --clef-accent: #2dd4bf;
+  --clef-accent-soft: #11332e;
+  --clef-on-accent: #062a26;
+  --clef-danger: #f87171;
+  --clef-danger-soft: #2a1616;
+  --clef-ok: #4ade80;
+  --clef-ok-soft: #12241a;
+  --clef-warn: #fbbf24;
+  --clef-warn-soft: #2a2010;
+}
+
+.clef *,
+.clef *::before,
+.clef *::after {
+  box-sizing: border-box;
+}
+
+.clef button,
+.clef input,
+.clef select,
+.clef textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.clef button {
+  transition: transform 160ms var(--clef-ease-out);
+}
+
+.clef button:active:not(:disabled):not(.group-name) {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clef button {
+    transition: none;
+  }
+
+  .clef button:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+.clef ::selection {
+  background: color-mix(in srgb, var(--clef-accent) 25%, transparent);
+}
+
+.clef ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.clef ::-webkit-scrollbar-thumb {
+  background: var(--clef-border);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.clef ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.clef .tok-key {
+  color: var(--clef-accent);
+}
+
+.clef .tok-str {
+  color: var(--clef-ok);
+}
+
+.clef .tok-num {
+  color: var(--clef-warn);
+}
+
+.clef .tok-bool {
+  color: var(--clef-danger);
+}
+
+.clef .tok-null {
+  color: var(--clef-muted);
+}
