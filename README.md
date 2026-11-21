@@ -52,8 +52,6 @@ In a Svelte app, use the component (`svelte ^5` is an optional peer):
 
 Options are reactive: change fields or replace the whole object and the widget updates without reloading the document.
 
-clef is not on npm yet. Until the first release, serve `dist/clef.iife.js` from this repository — the example pages fall back to it automatically.
-
 ## Options
 
 | Option | What it does |
@@ -100,7 +98,7 @@ A hosted copy runs at https://clef-hazel.vercel.app — HTTP only, because Verce
 | `/examples/cdn.html` | one `<script>` tag from jsDelivr + `clef.mount` |
 | `/examples/svelte/` | the `<Clef>` component from `@chord-ts/clef/svelte` |
 
-Open the HTML pages through the demo server: `pnpm demo:server` → http://localhost:4000/examples/cdn.html (and the others). While the package is unpublished, CDN pages fall back to the built `dist/` locally. The Svelte example needs a build: `pnpm build`, then `pnpm dev` → http://localhost:5173/examples/svelte/.
+Open the HTML pages through the demo server: `pnpm demo:server` → http://localhost:4000/examples/cdn.html (and the others). The Svelte example needs a build: `pnpm build`, then `pnpm dev` → http://localhost:5173/examples/svelte/.
 
 ## Development
 

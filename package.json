@@ -7,9 +7,12 @@
   "engines": {
     "node": ">=22"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chord-ts/clef.git"
+    "url": "https://github.com/chord-ts/clef"
   },
   "keywords": [
     "openrpc",

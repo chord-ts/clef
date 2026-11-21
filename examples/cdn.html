@@ -20,10 +20,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@chord-ts/clef"></script>
     <script>
-      // repo-local preview only (package not on npm yet): fall back to the built bundle
-      if (!window.clef) document.write('<script src="../dist/clef.iife.js"><\/script>');
-    </script>
-    <script>
       clef.mount('#docs', { url: '/openrpc.json', endpoint: '/rpc' });
     </script>
   </body>
