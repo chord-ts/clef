@@ -49,6 +49,19 @@
 </script>
 
 <aside class="sidebar">
+  <button
+    type="button"
+    class="collapse"
+    onclick={oncollapse}
+    title="Collapse sidebar"
+    aria-label="Collapse sidebar"
+  >
+    <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
+      <path d="M5.75 2.75H3.75a2 2 0 0 0-2 2v6.5a2 2 0 0 0 2 2h2z" fill="currentColor" fill-opacity="0.35" />
+      <rect x="1.75" y="2.75" width="12.5" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+      <path d="M5.75 2.75v10.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+    </svg>
+  </button>
   <header class="head">
     <div class="title-row">
       <div class="mark" aria-hidden="true">
@@ -64,19 +77,6 @@
       </div>
     </div>
     {#if doc.info.description}<p class="desc">{doc.info.description}</p>{/if}
-    <button
-      type="button"
-      class="collapse"
-      onclick={oncollapse}
-      title="Collapse sidebar"
-      aria-label="Collapse sidebar"
-    >
-      <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
-        <path d="M5.75 2.75H3.75a2 2 0 0 0-2 2v6.5a2 2 0 0 0 2 2h2z" fill="currentColor" fill-opacity="0.35" />
-        <rect x="1.75" y="2.75" width="12.5" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
-        <path d="M5.75 2.75v10.5" fill="none" stroke="currentColor" stroke-width="1.5" />
-      </svg>
-    </button>
   </header>
 
   <div class="search">
@@ -127,6 +127,7 @@
 
 <style>
   .sidebar {
+    position: relative;
     grid-area: sidebar;
     display: flex;
     flex-direction: column;
@@ -387,6 +388,38 @@
     .nav {
       flex: none;
       overflow-y: visible;
+    }
+
+    /* stays reachable while the island scrolls; negative bottom margin keeps it
+       from adding a row, so it overlays the head exactly like on desktop.
+       44x34 mirrors the method pane's .m-btn icon button (18px svg + 7/12 padding + border) */
+    .collapse {
+      position: sticky;
+      top: 10px;
+      align-self: flex-end;
+      /* the scrolling column would otherwise shrink the button to min-content */
+      flex-shrink: 0;
+      width: 44px;
+      height: 34px;
+      margin: 21px 14px -55px 0;
+      z-index: 2;
+      background: var(--clef-bg-soft);
+      /* floats over scrolling content: hairline keeps the edge crisp, layered
+         shadow lifts it off the page; static — no animation on a frequent control */
+      border: 1px solid var(--clef-border);
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / 0.06),
+        0 4px 12px rgb(0 0 0 / 0.1);
+    }
+
+    :global(.clef[data-theme='dark']) .collapse {
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / 0.4),
+        0 4px 12px rgb(0 0 0 / 0.35);
+    }
+
+    .head {
+      padding-right: 62px;
     }
   }
 </style>

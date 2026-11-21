@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>clef — CDN example</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      #docs {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="docs"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@chord-ts/clef"></script>
+    <script>
+      // repo-local preview only (package not on npm yet): fall back to the built bundle
+      if (!window.clef) document.write('<script src="../dist/clef.iife.js"><\/script>');
+    </script>
+    <script>
+      clef.mount('#docs', { url: '/openrpc.json', endpoint: '/rpc' });
+    </script>
+  </body>
+</html>

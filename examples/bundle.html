@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>clef — self-hosted bundle example</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      #docs {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="docs"></div>
+
+    <!-- the IIFE file shipped in the npm package; from node_modules it is
+         ./node_modules/@chord-ts/clef/dist/clef.iife.js.
+         With a bundler, drop the script tags and use the ESM entry instead:
+           import { mount } from '@chord-ts/clef';
+           mount('#docs', { url: '/openrpc.json', endpoint: '/rpc' }); -->
+    <script src="../dist/clef.iife.js"></script>
+    <script>
+      clef.mount('#docs', { url: '/openrpc.json', endpoint: '/rpc' });
+    </script>
+  </body>
+</html>

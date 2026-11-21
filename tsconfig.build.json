@@ -6,5 +6,5 @@
     "emitDeclarationOnly": true,
     "outDir": "dist/types"
   },
-  "include": ["src/public.ts"]
+  "include": ["src/public.ts", "src/svelte.ts"]
 }

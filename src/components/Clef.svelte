@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { loadDocument } from '../core/loader';
   import type { OpenRPCDocument } from '../core/types';
   import type { MountOptions } from '../public';
@@ -179,13 +180,20 @@
     options.theme === 'dark' || ((options.theme ?? 'auto') === 'auto' && prefersDark) ? 'dark' : 'light'
   );
 
+  // key on content, not identity: replacing the options object wraps sources in
+  // fresh $state proxies and would reload the document even when unchanged
+  const loadKey = $derived(
+    JSON.stringify([options.spec, options.url, options.endpoint, options.transport])
+  );
+
   $effect(() => {
-    const source = {
+    loadKey;
+    const source = untrack(() => ({
       spec: options.spec,
       url: options.url,
       endpoint: options.endpoint,
       transport: options.transport
-    };
+    }));
     const token = ++loadToken;
     loading = true;
     loadError = null;
@@ -604,35 +612,45 @@
     }
 
     .content {
-      padding: 0 20px 48px;
+      padding: 10px 20px 48px;
     }
 
+    /* no bar/line: two floating chips, same elevation as the sidebar button;
+       the row owns its space, content scrolls beneath once stuck.
+       24px gap keeps the ambient shadow off the article's first chip */
     .mobile-bar {
       position: sticky;
-      top: 0;
+      top: 10px;
       z-index: 2;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      margin: 0 -20px 20px;
-      padding: 10px 16px;
-      background: var(--clef-bg);
-      border-bottom: 1px solid var(--clef-border);
+      margin: 0 0 24px;
     }
 
     .m-btn {
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 12px;
+      height: 34px;
+      padding: 0 12px;
       border: 1px solid var(--clef-border);
       border-radius: 8px;
-      background: var(--clef-bg-soft);
+      background: var(--clef-bg);
       color: var(--clef-muted);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / 0.06),
+        0 4px 12px rgb(0 0 0 / 0.1);
+    }
+
+    :global(.clef[data-theme='dark']) .m-btn {
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / 0.4),
+        0 4px 12px rgb(0 0 0 / 0.35);
     }
 
     .m-btn:hover {

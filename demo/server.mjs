@@ -154,7 +154,7 @@ const server = createServer(async (req, res) => {
       return;
     }
     const path = url.pathname === '/' ? '/demo/preview.html' : url.pathname;
-    if (!path.startsWith('/demo/') && !path.startsWith('/dist/')) {
+    if (!path.startsWith('/demo/') && !path.startsWith('/dist/') && !path.startsWith('/examples/')) {
       res.statusCode = 404;
       res.end('Not found');
       return;
@@ -194,6 +194,7 @@ wss.on('connection', (socket) => {
   });
 });
 
-server.listen(4000, () => {
-  console.log('clef demo server: http://localhost:4000 (spec: /openrpc.json, rpc: /rpc over HTTP + WS)');
+const port = Number(process.argv[2]) || 4000;
+server.listen(port, () => {
+  console.log(`clef demo server: http://localhost:${port} (spec: /openrpc.json, rpc: /rpc over HTTP + WS)`);
 });

@@ -32,6 +32,19 @@
 
 Для сборщиков есть ESM-версия: `npm install @chord-ts/clef`, затем `import { mount } from '@chord-ts/clef'`. Типы публичного API идут в комплекте.
 
+В Svelte-приложении — компонентом (`svelte ^5` — опциональный peer):
+
+```svelte
+<script lang="ts">
+  import { Clef } from '@chord-ts/clef/svelte';
+  let options = $state({ url: '/openrpc.json', endpoint: '/rpc' });
+</script>
+
+<Clef {options} />
+```
+
+Опции реактивные: меняйте поля или заменяйте объект целиком — виджет обновится без перезагрузки документа.
+
 ## Опции
 
 | Опция | Что делает |
@@ -59,6 +72,19 @@ pnpm demo:server
 Поднимает mock JSON-RPC сервер на http://localhost:4000 — там же страница с собранным бандлом: переключатель источников спеки (url / rpc.discover / inline / web component) и тем. Все методы из демо-спеки реально исполняются, включая WebSocket.
 
 Для разработки с HMR: `pnpm dev` → http://localhost:5173/demo/ (демо-сервер должен быть запущен).
+
+## Примеры
+
+`examples/` — три минимальные страницы с одним и тем же сценарием, различаются только способом подключения:
+
+| Страница | Подключение |
+| --- | --- |
+| `/examples/component.html` | декларативно: элемент `<clef-docs>` |
+| `/examples/bundle.html` | свой бандл: файл из npm-пакета или `import { mount } from '@chord-ts/clef'` в сборщике |
+| `/examples/cdn.html` | один тег `<script>` с jsDelivr + `clef.mount` |
+| `/examples/svelte/` | компонент `<Clef>` из `@chord-ts/clef/svelte` |
+
+HTML-страницы открываются через демо-сервер: `pnpm demo:server` → http://localhost:4000/examples/cdn.html (и остальные). Пока пакет не опубликован в npm, CDN-страницы локально подстраховываются собранным `dist/`. Svelte-пример требует сборки: `pnpm build`, затем `pnpm dev` → http://localhost:5173/examples/svelte/.
 
 ## Разработка
 

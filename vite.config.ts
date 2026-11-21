@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import cssInjectedByJs from 'vite-plugin-css-injected-by-js';
@@ -6,7 +7,12 @@ import cssInjectedByJs from 'vite-plugin-css-injected-by-js';
 export default defineConfig({
   plugins: [svelte(), cssInjectedByJs()],
   resolve: {
-    conditions: ['browser']
+    conditions: ['browser'],
+    alias: {
+      // dev: compile the svelte entry from source — vite-plugin-svelte rejects
+      // re-processing the minified dist bundle (reserved `$` identifiers)
+      '@chord-ts/clef/svelte': fileURLToPath(new URL('./src/svelte-entry.ts', import.meta.url))
+    }
   },
   build: {
     target: 'es2022',

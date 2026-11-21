@@ -191,6 +191,7 @@
         <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
           <path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
+        Docs
       </button>
     {/if}
     <h3>Try it</h3>
@@ -335,15 +336,26 @@
   .back {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
     flex-shrink: 0;
     border: 1px solid var(--clef-border);
     border-radius: 8px;
-    background: var(--clef-bg);
+    background: var(--clef-bg-soft);
     color: var(--clef-muted);
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.06),
+      0 4px 12px rgb(0 0 0 / 0.1);
+  }
+
+  :global(.clef[data-theme='dark']) .back {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.4),
+      0 4px 12px rgb(0 0 0 / 0.35);
   }
 
   .back:hover {
@@ -558,5 +570,20 @@
     font-size: 13px;
     color: var(--clef-danger);
     word-break: break-word;
+  }
+
+  @media (max-width: 900px) {
+    /* the Docs chip floats over the form like the other pane controls;
+       the pane's own title is what confused people, so it goes away */
+    .head {
+      position: sticky;
+      top: 10px;
+      z-index: 2;
+    }
+
+    h3,
+    .hint {
+      display: none;
+    }
   }
 </style>
