@@ -3,7 +3,7 @@ import type { ClefHandle, MountOptions, Theme, Transport } from './public';
 
 class ClefDocsElement extends HTMLElement {
   static get observedAttributes(): string[] {
-    return ['spec', 'url', 'endpoint', 'transport', 'theme', 'try-it'];
+    return ['spec', 'url', 'endpoint', 'transport', 'theme', 'try-it', 'icon'];
   }
 
   #handle: ClefHandle | null = null;
@@ -40,7 +40,8 @@ class ClefDocsElement extends HTMLElement {
       endpoint: attr('endpoint') ?? undefined,
       transport: (attr('transport') as Transport | null) ?? undefined,
       theme: (attr('theme') as Theme | null) ?? undefined,
-      tryIt: this.hasAttribute('try-it') ? attr('try-it') !== 'false' : undefined
+      tryIt: this.hasAttribute('try-it') ? attr('try-it') !== 'false' : undefined,
+      icon: attr('icon') ?? undefined
     };
   }
 }

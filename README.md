@@ -1,20 +1,23 @@
 <div align="center">
 
-# clef
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/clef-horizontal-white.svg">
+  <img src="assets/clef-horizontal.svg" width="480" alt="clef — an isometric C with a terminal prompt in its aperture">
+</picture>
 
-**Swagger UI для OpenRPC — документация и живая консоль в одном файле с CDN**
+**The only clef to your JSON-RPC backend. Your OpenRPC spec, direct — no OpenAPI casting.**
 
-<a href="https://svelte.dev"><img src="https://img.shields.io/badge/Svelte-4A4A55?style=for-the-badge&logo=svelte&logoColor=FF3E00"></a>
-<a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white"></a>
-<a href="https://opensource.org/license/MIT"><img src="https://img.shields.io/badge/License_MIT-228B22?style=for-the-badge"></a>
-
-Нативный OpenRPC без конвертации в OpenAPI: методы, схемы и ошибки рендерятся как есть, а любой метод можно выполнить прямо из документации — по HTTP или WebSocket, с готовыми сниппетами curl и JS. Внутри Svelte 5, снаружи один самодостаточный файл (~44 КБ gzip): без React, MUI и внешних зависимостей.
+Methods, schemas and errors render exactly as written, and every method executes right from the docs — over HTTP or WebSocket, with ready-made curl and JS snippets. Svelte 5 inside, one self-contained file outside (~44 KB gzip): no React, no MUI, no runtime dependencies.
 
 </div>
 
-## Подключение
+<p align="center">
+  <img src="assets/readme/screenshot-dark.png" width="100%" alt="clef in dark theme rendering a demo Notes API: method sidebar, parameter and result schemas, and the Try it console showing a live JSON-RPC response">
+</p>
 
-Один тег `<script>` — и на странице доступны и функция `clef.mount`, и элемент `<clef-docs>`:
+## Quick start
+
+One `<script>` tag gives you both the `clef.mount` function and the `<clef-docs>` element:
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@chord-ts/clef"></script>
@@ -24,15 +27,15 @@
 </script>
 ```
 
-Декларативный вариант, без JS-кода на странице:
+Or declaratively, with no JS on the page:
 
 ```html
 <clef-docs url="/openrpc.json" endpoint="/rpc" theme="auto" style="display: block; height: 100vh"></clef-docs>
 ```
 
-Для сборщиков есть ESM-версия: `npm install @chord-ts/clef`, затем `import { mount } from '@chord-ts/clef'`. Типы публичного API идут в комплекте.
+With a bundler: `npm install @chord-ts/clef`, then `import { mount } from '@chord-ts/clef'`. Public API types are included.
 
-В Svelte-приложении — компонентом (`svelte ^5` — опциональный peer):
+In a Svelte app, use the component (`svelte ^5` is an optional peer):
 
 ```svelte
 <script lang="ts">
@@ -43,68 +46,73 @@
 <Clef {options} />
 ```
 
-Опции реактивные: меняйте поля или заменяйте объект целиком — виджет обновится без перезагрузки документа.
+Options are reactive: change fields or replace the whole object and the widget updates without reloading the document.
 
-## Опции
+clef is not on npm yet. Until the first release, serve `dist/clef.iife.js` from this repository — the example pages fall back to it automatically.
 
-| Опция | Что делает |
+## Options
+
+| Option | What it does |
 | --- | --- |
-| `spec` | OpenRPC-документ объектом или JSON-строкой — инлайн, без fetch и CORS |
-| `url` | URL документа; clef скачает его сам |
-| `endpoint` | JSON-RPC эндпоинт: спека тянется через `rpc.discover`, адрес подставляется в Try it |
-| `transport` | `'http'` (по умолчанию) или `'websocket'`; для WS адрес `http(s)://` автоматически заменяется на `ws(s)://` |
-| `theme` | `'auto'` (по умолчанию), `'light'` или `'dark'` |
-| `tryIt` | `false` прячет консоль — остаётся только документация |
-| `requestTimeoutMs` | таймаут запроса, по умолчанию 15000 |
+| `spec` | OpenRPC document as an object or JSON string — inline, no fetch and no CORS |
+| `url` | URL of the document; clef fetches it itself |
+| `endpoint` | JSON-RPC endpoint: the spec is pulled via `rpc.discover` and the address is used in Try it |
+| `transport` | `'http'` (default) or `'websocket'`; for WS, `http(s)://` is rewritten to `ws(s)://` automatically |
+| `theme` | `'auto'` (default), `'light'` or `'dark'` |
+| `tryIt` | `false` hides the console, leaving documentation only |
+| `requestTimeoutMs` | request timeout, 15000 by default |
+| `icon` | logo URL for the sidebar header; falls back to `info.x-logo.url` from the spec, then to a neutral document icon |
 
-Источник спеки выбирается по приоритету `spec` → `url` → `endpoint`. Виджет занимает всю высоту контейнера (минимум 480px), поэтому контейнеру стоит задать высоту явно.
+The spec source is chosen by priority: `spec` → `url` → `endpoint`. The widget fills its container's height (480px minimum), so give the container an explicit height.
 
-На узких экранах (≤900px) колонки превращаются в три листаемые панели: методы, документация, Try it. Кнопка с иконкой сайдбара в шапке документации уводит влево к списку методов, кнопка «Try it» — вправо к консоли; панели также листаются горизонтальными свайпами.
+On narrow screens (≤900px) the columns become three swipeable panels: methods, documentation, Try it. A sidebar-icon button in the docs header jumps left to the method list, a “Try it” button jumps right to the console, and horizontal swipes move between panels as well.
 
-`mount()` возвращает хэндл: `update(options)` заменяет опции на лету, `destroy()` удаляет виджет. У `<clef-docs>` те же настройки через атрибуты (`url`, `endpoint`, `transport`, `theme`, `try-it`, `spec` — JSON-строка), а объектом спеку можно передать через свойство `element.spec`.
+`mount()` returns a handle: `update(options)` replaces options on the fly, `destroy()` removes the widget. `<clef-docs>` takes the same settings as attributes (`url`, `endpoint`, `transport`, `theme`, `try-it`, `icon`, `spec` — a JSON string); an object spec can also be set via the `element.spec` property.
 
-## Демо
+## Demo
 
 ```bash
 pnpm demo:server
 ```
 
-Поднимает mock JSON-RPC сервер на http://localhost:4000 — там же страница с собранным бандлом: переключатель источников спеки (url / rpc.discover / inline / web component) и тем. Все методы из демо-спеки реально исполняются, включая WebSocket.
+Starts a mock JSON-RPC server at http://localhost:4000 with a page built on the bundled file: switch spec sources (url / rpc.discover / inline / web component) and themes. Every method in the demo spec really executes, including over WebSocket.
 
-Для разработки с HMR: `pnpm dev` → http://localhost:5173/demo/ (демо-сервер должен быть запущен).
+For development with HMR: `pnpm dev` → http://localhost:5173/demo/ (the demo server must be running).
 
-## Примеры
+## Examples
 
-`examples/` — три минимальные страницы с одним и тем же сценарием, различаются только способом подключения:
+`examples/` holds minimal pages with the same scenario, differing only in how clef is loaded:
 
-| Страница | Подключение |
+| Page | Loading |
 | --- | --- |
-| `/examples/component.html` | декларативно: элемент `<clef-docs>` |
-| `/examples/bundle.html` | свой бандл: файл из npm-пакета или `import { mount } from '@chord-ts/clef'` в сборщике |
-| `/examples/cdn.html` | один тег `<script>` с jsDelivr + `clef.mount` |
-| `/examples/svelte/` | компонент `<Clef>` из `@chord-ts/clef/svelte` |
+| `/examples/component.html` | declarative: the `<clef-docs>` element |
+| `/examples/bundle.html` | own bundle: the file from the npm package, or `import { mount } from '@chord-ts/clef'` in a bundler |
+| `/examples/cdn.html` | one `<script>` tag from jsDelivr + `clef.mount` |
+| `/examples/svelte/` | the `<Clef>` component from `@chord-ts/clef/svelte` |
 
-HTML-страницы открываются через демо-сервер: `pnpm demo:server` → http://localhost:4000/examples/cdn.html (и остальные). Пока пакет не опубликован в npm, CDN-страницы локально подстраховываются собранным `dist/`. Svelte-пример требует сборки: `pnpm build`, затем `pnpm dev` → http://localhost:5173/examples/svelte/.
+Open the HTML pages through the demo server: `pnpm demo:server` → http://localhost:4000/examples/cdn.html (and the others). While the package is unpublished, CDN pages fall back to the built `dist/` locally. The Svelte example needs a build: `pnpm build`, then `pnpm dev` → http://localhost:5173/examples/svelte/.
 
-## Разработка
+## Development
 
 ```bash
 pnpm install
-pnpm test     # vitest: ядро + интеграция mount() в jsdom
+pnpm test     # vitest: core + mount() integration in jsdom
 pnpm check    # svelte-check
-pnpm build    # dist/clef.iife.js + dist/clef.esm.js + типы
+pnpm build    # dist/clef.iife.js + dist/clef.esm.js + types
 ```
 
-Ядро (`src/core`) не зависит от Svelte: загрузчик спеки, резолв `$ref`, JSON-RPC клиент и генерация примеров из JSON Schema покрыты тестами отдельно от UI. Компоненты (`src/components`) — руны Svelte 5, стили инлайнятся в бандл при сборке.
+The core (`src/core`) does not depend on Svelte: the spec loader, `$ref` resolution, the JSON-RPC client and example generation from JSON Schema are tested separately from the UI. Components (`src/components`) use Svelte 5 runes; styles are inlined into the bundle at build time.
 
-## Ограничения
+The brand kit (symbol, lockup, mono versions, favicons and app icons) lives in `assets/` and is copied to `dist/assets/` at build time, so it ships inside the npm package alongside the bundle. Usage rules: `logo/GUIDELINES.md`.
 
-- Спека только в JSON, YAML не поддерживается.
-- `$ref` — только внутренние (`#/components/...`), внешние ссылки не резолвятся.
-- Описания рендерятся как обычный текст, без Markdown.
-- WebSocket-транспорт открывает отдельное соединение на каждый запрос.
-- Для кросс-доменных запросов из Try it эндпоинт должен отдавать CORS-заголовки.
+## Limitations
 
-## Лицензия
+- JSON specs only; YAML is not supported.
+- `$ref` resolves internal references (`#/components/...`) only; external links are not fetched.
+- Descriptions render as plain text, without Markdown.
+- The WebSocket transport opens a separate connection per request.
+- Cross-origin Try it requests require CORS headers on the endpoint.
+
+## License
 
 MIT

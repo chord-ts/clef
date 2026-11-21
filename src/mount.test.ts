@@ -125,6 +125,28 @@ describe('mount', () => {
     expect(() => mount('#does-not-exist', { spec })).toThrow(/not found/);
   });
 
+  it('sidebar mark prefers icon option, then x-logo, then neutral glyph', async () => {
+    const handle = mount(host(), { spec, icon: 'https://example.test/option.png' });
+    await tick();
+    flushSync();
+    expect(container!.querySelector('.mark img')?.getAttribute('src')).toBe('https://example.test/option.png');
+
+    handle.update({
+      spec: { ...spec, info: { ...spec.info, 'x-logo': { url: 'https://example.test/spec.png' } } },
+      icon: undefined
+    });
+    await tick();
+    flushSync();
+    expect(container!.querySelector('.mark img')?.getAttribute('src')).toBe('https://example.test/spec.png');
+
+    handle.update({ spec, icon: undefined });
+    await tick();
+    flushSync();
+    expect(container!.querySelector('.mark img')).toBeNull();
+    expect(container!.querySelector('.mark svg')).toBeTruthy();
+    handle.destroy();
+  });
+
   it('renders try-it as a sibling island and switches JSON/curl/JS previews', async () => {
     const handle = mount(host(), { spec, endpoint: 'http://localhost:9/rpc' });
     await tick();

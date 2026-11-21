@@ -4,17 +4,21 @@
 
   let {
     doc,
+    icon,
     query = $bindable(''),
     selected = $bindable<string | null>(null),
     oncollapse,
     onselect
   }: {
     doc: OpenRPCDocument;
+    icon?: string;
     query?: string;
     selected?: string | null;
     oncollapse: () => void;
     onselect?: () => void;
   } = $props();
+
+  const logoUrl = $derived(icon ?? doc.info['x-logo']?.url ?? null);
 
   let collapsed = $state<Set<string>>(new Set());
 
@@ -64,12 +68,16 @@
   </button>
   <header class="head">
     <div class="title-row">
-      <div class="mark" aria-hidden="true">
-        <svg viewBox="0 0 16 16" width="16" height="16">
-          <path d="M6.2 12.2V3.6l7.2-1.5v8.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
-          <ellipse cx="4.1" cy="12.2" rx="2.2" ry="1.7" fill="currentColor" />
-          <ellipse cx="11.3" cy="10.7" rx="2.2" ry="1.7" fill="currentColor" />
-        </svg>
+      <div class="mark" class:custom={logoUrl !== null} aria-hidden="true">
+        {#if logoUrl}
+          <img src={logoUrl} alt="" />
+        {:else}
+          <svg viewBox="0 0 16 16" width="18" height="18">
+            <path d="M4.75 1.75h4.9l3.6 3.6v8.9a1 1 0 0 1-1 1h-7.5a1 1 0 0 1-1-1V2.75a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+            <path d="M9.5 1.9v3.6h3.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+            <path d="M5.75 8.25h4.5M5.75 10.75h4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        {/if}
       </div>
       <div class="title-text">
         <h1>{doc.info.title}</h1>
@@ -163,11 +171,20 @@
     width: 34px;
     height: 34px;
     border-radius: 9px;
-    color: var(--clef-on-accent);
-    background: linear-gradient(135deg, var(--clef-accent), color-mix(in srgb, var(--clef-accent) 75%, #000));
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.14),
-      inset 0 1px 0 rgb(255 255 255 / 0.18);
+    color: var(--clef-accent);
+    background: var(--clef-accent-soft);
+  }
+
+  .mark.custom {
+    background: var(--clef-bg);
+    border: 1px solid var(--clef-border);
+  }
+
+  .mark img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    border-radius: 4px;
   }
 
   .title-text {

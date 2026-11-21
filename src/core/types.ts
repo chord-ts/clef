@@ -15,6 +15,7 @@ export interface InfoObject {
   termsOfService?: string;
   contact?: { name?: string; url?: string; email?: string };
   license?: { name: string; url?: string };
+  'x-logo'?: { url?: string; altText?: string; backgroundColor?: string };
 }
 
 export interface ServerObject {

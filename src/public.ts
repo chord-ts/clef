@@ -13,6 +13,7 @@ export interface MountOptions {
   theme?: Theme;
   tryIt?: boolean;
   requestTimeoutMs?: number;
+  icon?: string;
 }
 
 export interface ClefHandle {

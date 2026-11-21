@@ -275,6 +275,7 @@
           {:else}
             <Sidebar
               {doc}
+              icon={options.icon}
               bind:query
               bind:selected={selectedName}
               oncollapse={collapseSidebar}

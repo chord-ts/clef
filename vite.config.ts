@@ -1,11 +1,26 @@
 /// <reference types="vitest/config" />
+import { cpSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import cssInjectedByJs from 'vite-plugin-css-injected-by-js';
 
 export default defineConfig({
-  plugins: [svelte(), cssInjectedByJs()],
+  plugins: [
+    svelte(),
+    cssInjectedByJs(),
+    {
+      // brand kit ships inside the npm package (files: ["dist"])
+      name: 'clef-brand-assets',
+      closeBundle() {
+        cpSync(
+          fileURLToPath(new URL('./assets', import.meta.url)),
+          fileURLToPath(new URL('./dist/assets', import.meta.url)),
+          { recursive: true }
+        );
+      }
+    }
+  ],
   resolve: {
     conditions: ['browser'],
     alias: {
