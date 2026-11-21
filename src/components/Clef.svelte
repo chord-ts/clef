@@ -38,6 +38,15 @@
   let sidebarCollapsed = $state(false);
   let dragging = $state(false);
 
+  let isMobile = $state(false);
+  let pane = $state(1);
+  let dragOffset = $state(0);
+  let swiping = $state(false);
+  let stripEl = $state<HTMLElement | null>(null);
+
+  // must match the gap of .strip in the mobile media query
+  const MOBILE_GAP = 12;
+
   function saveLayout() {
     try {
       localStorage.setItem('clef:layout', JSON.stringify({ sidebarWidth, tryWidth }));
@@ -86,6 +95,86 @@
     return () => media.removeEventListener('change', onChange);
   });
 
+  $effect(() => {
+    const media = matchMedia('(max-width: 900px)');
+    isMobile = media.matches;
+    const onChange = (event: MediaQueryListEvent) => (isMobile = event.matches);
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  });
+
+  function collapseSidebar() {
+    if (isMobile) pane = 1;
+    else sidebarCollapsed = true;
+  }
+
+  let gesture: {
+    id: number;
+    startX: number;
+    startY: number;
+    anchorX: number;
+    base: number;
+    pitch: number;
+    active: boolean;
+  } | null = null;
+
+  function swipeStart(event: PointerEvent) {
+    if (!isMobile || event.pointerType === 'mouse' || gesture || !stripEl) return;
+    gesture = {
+      id: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      anchorX: event.clientX,
+      base: pane,
+      pitch: stripEl.clientWidth + MOBILE_GAP,
+      active: false
+    };
+  }
+
+  function swipeMove(event: PointerEvent) {
+    if (!gesture || event.pointerId !== gesture.id) return;
+    const dx = event.clientX - gesture.startX;
+    const dy = event.clientY - gesture.startY;
+    if (!gesture.active) {
+      // finger jitter during vertical scrolling must never move the strip
+      if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) {
+        gesture = null;
+        return;
+      }
+      if (Math.abs(dx) < 24 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      gesture.active = true;
+      // rebase so the panel follows the finger from zero instead of jumping by the lead-in
+      gesture.anchorX = event.clientX;
+      swiping = true;
+      (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    }
+    const dragDx = event.clientX - gesture.anchorX;
+    const raw = gesture.base - dragDx / gesture.pitch;
+    const clamped = clamp(raw, 0, maxPane);
+    const eased = clamped + (raw - clamped) * 0.25;
+    dragOffset = (gesture.base - eased) * gesture.pitch;
+  }
+
+  function swipeEnd(event: PointerEvent) {
+    if (!gesture || event.pointerId !== gesture.id) return;
+    if (gesture.active) {
+      const dx = event.clientX - gesture.startX;
+      const threshold = Math.min(80, gesture.pitch * 0.18);
+      const step = dx <= -threshold ? 1 : dx >= threshold ? -1 : 0;
+      pane = clamp(gesture.base + step, 0, maxPane);
+    }
+    gesture = null;
+    swiping = false;
+    dragOffset = 0;
+  }
+
+  function swipeCancel(event: PointerEvent) {
+    if (!gesture || event.pointerId !== gesture.id) return;
+    gesture = null;
+    swiping = false;
+    dragOffset = 0;
+  }
+
   const theme = $derived(
     options.theme === 'dark' || ((options.theme ?? 'auto') === 'auto' && prefersDark) ? 'dark' : 'light'
   );
@@ -117,6 +206,11 @@
 
   const selectedMethod = $derived(doc?.methods.find((method) => method.name === selectedName) ?? null);
   const tryItEnabled = $derived(options.tryIt !== false);
+  const maxPane = $derived(tryItEnabled && selectedMethod ? 2 : 1);
+
+  $effect(() => {
+    if (pane > maxPane) pane = maxPane;
+  });
 
   $effect(() => {
     selectedName;
@@ -139,80 +233,121 @@
       </div>
     </div>
   {:else if doc}
+    <!-- touch swipe surface for the mobile pager: pointer handlers drive gestures, not a widget role -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="layout"
       class:no-try={!tryItEnabled}
       class:collapsed={sidebarCollapsed}
       class:dragging
-      style="--sw: {sidebarWidth}px; --tw: {tryWidth}px"
+      class:swiping
+      style="--sw: {sidebarWidth}px; --tw: {tryWidth}px; --pane: {pane}; --drag: {dragOffset}px"
+      onpointerdown={swipeStart}
+      onpointermove={swipeMove}
+      onpointerup={swipeEnd}
+      onpointercancel={swipeCancel}
     >
-      {#if sidebarCollapsed}
-        <div class="rail">
-          <button
-            type="button"
-            class="rail-btn"
-            onclick={() => (sidebarCollapsed = false)}
-            title="Expand sidebar"
-            aria-label="Expand sidebar"
-          >
-            <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
-              <rect x="1.75" y="2.75" width="12.5" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
-              <path d="M5.75 2.75v10.5" fill="none" stroke="currentColor" stroke-width="1.5" />
-            </svg>
-          </button>
+      <div class="strip" bind:this={stripEl}>
+        <div class="side-cell" inert={isMobile && pane !== 0 ? true : undefined}>
+          {#if sidebarCollapsed && !isMobile}
+            <div class="rail">
+              <button
+                type="button"
+                class="rail-btn"
+                onclick={() => (sidebarCollapsed = false)}
+                title="Expand sidebar"
+                aria-label="Expand sidebar"
+              >
+                <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
+                  <rect x="1.75" y="2.75" width="12.5" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M5.75 2.75v10.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+              </button>
+            </div>
+          {:else}
+            <Sidebar
+              {doc}
+              bind:query
+              bind:selected={selectedName}
+              oncollapse={collapseSidebar}
+              onselect={() => (pane = 1)}
+            />
+            <!-- WAI-ARIA window splitter: a focusable separator is interactive, but Svelte's a11y checker doesn't model this exception -->
+            <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+            <div
+              class="divider d1"
+              role="separator"
+              tabindex="0"
+              aria-label="Resize sidebar"
+              aria-valuenow={sidebarWidth}
+              aria-valuemin={180}
+              aria-valuemax={480}
+              onpointerdown={(event) => startDrag(event, 'sidebar')}
+              onkeydown={(event) => resizeKey(event, 'sidebar')}
+              ondblclick={() => {
+                sidebarWidth = DEFAULT_SIDEBAR_WIDTH;
+                saveLayout();
+              }}
+            ></div>
+          {/if}
         </div>
-      {:else}
-        <Sidebar {doc} bind:query bind:selected={selectedName} oncollapse={() => (sidebarCollapsed = true)} />
-        <!-- WAI-ARIA window splitter: a focusable separator is interactive, but Svelte's a11y checker doesn't model this exception -->
-        <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
-        <div
-          class="divider d1"
-          role="separator"
-          tabindex="0"
-          aria-label="Resize sidebar"
-          aria-valuenow={sidebarWidth}
-          aria-valuemin={180}
-          aria-valuemax={480}
-          onpointerdown={(event) => startDrag(event, 'sidebar')}
-          onkeydown={(event) => resizeKey(event, 'sidebar')}
-          ondblclick={() => {
-            sidebarWidth = DEFAULT_SIDEBAR_WIDTH;
-            saveLayout();
-          }}
-        ></div>
-      {/if}
-      <main class="content" bind:this={mainEl}>
-        {#if selectedMethod}
-          {#key selectedMethod.name}
-            <MethodView {doc} method={selectedMethod} />
-          {/key}
-        {:else}
-          <div class="state"><p>This document declares no methods.</p></div>
+        <main class="content" bind:this={mainEl} inert={isMobile && pane !== 1 ? true : undefined}>
+          {#if isMobile}
+            <div class="mobile-bar">
+              <button
+                type="button"
+                class="m-btn"
+                onclick={() => (pane = 0)}
+                title="Methods"
+                aria-label="Show methods"
+              >
+                <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
+                  <rect x="1.75" y="2.75" width="12.5" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M5.75 2.75v10.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+              </button>
+              {#if tryItEnabled && selectedMethod}
+                <button type="button" class="m-btn m-try" onclick={() => (pane = 2)}>
+                  Try it
+                  <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                    <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+              {/if}
+            </div>
+          {/if}
+          {#if selectedMethod}
+            {#key selectedMethod.name}
+              <MethodView {doc} method={selectedMethod} />
+            {/key}
+          {:else}
+            <div class="state"><p>This document declares no methods.</p></div>
+          {/if}
+        </main>
+        {#if tryItEnabled && selectedMethod}
+          <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+          <div
+            class="divider d2"
+            role="separator"
+            tabindex="0"
+            aria-label="Resize try it"
+            aria-valuenow={tryWidth}
+            aria-valuemin={320}
+            aria-valuemax={720}
+            onpointerdown={(event) => startDrag(event, 'try')}
+            onkeydown={(event) => resizeKey(event, 'try')}
+            ondblclick={() => {
+              tryWidth = DEFAULT_TRY_WIDTH;
+              saveLayout();
+            }}
+          ></div>
+          <div class="try" inert={isMobile && pane !== 2 ? true : undefined}>
+            {#key selectedMethod.name}
+              <TryIt {doc} method={selectedMethod} {options} onback={isMobile ? () => (pane = 1) : undefined} />
+            {/key}
+          </div>
         {/if}
-      </main>
-      {#if tryItEnabled && selectedMethod}
-        <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
-        <div
-          class="divider d2"
-          role="separator"
-          tabindex="0"
-          aria-label="Resize try it"
-          aria-valuenow={tryWidth}
-          aria-valuemin={320}
-          aria-valuemax={720}
-          onpointerdown={(event) => startDrag(event, 'try')}
-          onkeydown={(event) => resizeKey(event, 'try')}
-          ondblclick={() => {
-            tryWidth = DEFAULT_TRY_WIDTH;
-            saveLayout();
-          }}
-        ></div>
-        <div class="try">
-          {#key selectedMethod.name}
-            <TryIt {doc} method={selectedMethod} {options} />
-          {/key}
-        </div>
-      {/if}
+      </div>
     </div>
   {/if}
 </div>
@@ -250,6 +385,15 @@
   .layout.dragging {
     user-select: none;
     cursor: col-resize;
+  }
+
+  .strip,
+  .side-cell {
+    display: contents;
+  }
+
+  .mobile-bar {
+    display: none;
   }
 
   .content {
@@ -417,16 +561,38 @@
   @media (max-width: 900px) {
     .layout,
     .layout.no-try {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto minmax(0, 1fr) auto;
-      grid-template-areas: 'sidebar' 'content' 'try';
-      gap: 12px;
+      display: block;
+      overflow: hidden;
       padding: 12px;
+      touch-action: pan-y;
     }
 
-    .layout.no-try {
-      grid-template-rows: auto minmax(0, 1fr);
-      grid-template-areas: 'sidebar' 'content';
+    .layout.swiping {
+      user-select: none;
+    }
+
+    .strip {
+      display: flex;
+      gap: 12px;
+      height: 100%;
+      transform: translateX(calc(var(--pane, 1) * (-100% - 12px) + var(--drag, 0px)));
+      transition: transform 320ms var(--clef-ease-out);
+    }
+
+    .layout.swiping .strip {
+      transition: none;
+    }
+
+    .side-cell,
+    .content,
+    .try {
+      flex: 0 0 100%;
+      min-width: 0;
+    }
+
+    /* display:contents would drop the wrapper's box and let the sidebar shrink to zero inside the strip */
+    .side-cell {
+      display: block;
     }
 
     .divider {
@@ -434,11 +600,57 @@
     }
 
     .try {
-      max-height: 50vh;
+      max-height: none;
     }
 
     .content {
-      padding: 24px 20px 48px;
+      padding: 0 20px 48px;
+    }
+
+    .mobile-bar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 -20px 20px;
+      padding: 10px 16px;
+      background: var(--clef-bg);
+      border-bottom: 1px solid var(--clef-border);
+    }
+
+    .m-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border: 1px solid var(--clef-border);
+      border-radius: 8px;
+      background: var(--clef-bg-soft);
+      color: var(--clef-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .m-btn:hover {
+      color: var(--clef-accent);
+      border-color: var(--clef-accent);
+      background: var(--clef-accent-soft);
+    }
+
+    .m-try {
+      color: var(--clef-accent);
+      background: var(--clef-accent-soft);
+      border-color: color-mix(in srgb, var(--clef-accent) 35%, var(--clef-border));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .strip {
+      transition: none;
     }
   }
 </style>

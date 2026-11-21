@@ -6,12 +6,14 @@
     doc,
     query = $bindable(''),
     selected = $bindable<string | null>(null),
-    oncollapse
+    oncollapse,
+    onselect
   }: {
     doc: OpenRPCDocument;
     query?: string;
     selected?: string | null;
     oncollapse: () => void;
+    onselect?: () => void;
   } = $props();
 
   let collapsed = $state<Set<string>>(new Set());
@@ -104,7 +106,10 @@
                 type="button"
                 class="item"
                 class:active={selected === method.name}
-                onclick={() => (selected = method.name)}
+                onclick={() => {
+                  selected = method.name;
+                  onselect?.();
+                }}
               >
                 <span class="name" class:deprecated={method.deprecated}>{method.name}</span>
                 {#if method.summary}<span class="summary">{method.summary}</span>{/if}
@@ -373,12 +378,15 @@
   }
 
   @media (max-width: 900px) {
+    /* the whole island scrolls as one: no pinned head/search/foot */
     .sidebar {
-      max-height: 42vh;
+      height: 100%;
+      overflow-y: auto;
     }
 
-    .desc {
-      display: none;
+    .nav {
+      flex: none;
+      overflow-y: visible;
     }
   }
 </style>

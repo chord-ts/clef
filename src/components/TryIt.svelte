@@ -10,11 +10,13 @@
   let {
     doc,
     method,
-    options
+    options,
+    onback
   }: {
     doc: OpenRPCDocument;
     method: MethodObject;
     options: MountOptions;
+    onback?: () => void;
   } = $props();
 
   type Kind = 'text' | 'number' | 'boolean' | 'enum' | 'json';
@@ -184,6 +186,13 @@
 
 <div class="tryit">
   <div class="head">
+    {#if onback}
+      <button type="button" class="back" onclick={onback} aria-label="Back to method documentation">
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+          <path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    {/if}
     <h3>Try it</h3>
     <span class="hint">JSON-RPC 2.0</span>
   </div>
@@ -319,8 +328,28 @@
 
   .head {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border: 1px solid var(--clef-border);
+    border-radius: 8px;
+    background: var(--clef-bg);
+    color: var(--clef-muted);
+    cursor: pointer;
+  }
+
+  .back:hover {
+    color: var(--clef-accent);
+    border-color: var(--clef-accent);
+    background: var(--clef-accent-soft);
   }
 
   h3 {
@@ -334,6 +363,7 @@
 
   .hint {
     margin: 0;
+    margin-left: auto;
     font-size: 12.5px;
     color: var(--clef-muted);
   }

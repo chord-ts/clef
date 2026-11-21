@@ -23,10 +23,17 @@ const spec: OpenRPCDocument = {
 
 let server: Server | undefined;
 let container: HTMLDivElement | undefined;
+let mobileViewport = false;
 
 beforeAll(() => {
-  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }));
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: mobileViewport && query === '(max-width: 900px)',
+    addEventListener: () => {},
+    removeEventListener: () => {}
+  }));
   Element.prototype.scrollTo = () => {};
+  Element.prototype.setPointerCapture = () => {};
+  Element.prototype.releasePointerCapture = () => {};
   Object.defineProperty(Element.prototype, 'animate', {
     configurable: true,
     writable: true,
@@ -41,6 +48,7 @@ beforeAll(() => {
 afterEach(async () => {
   container?.remove();
   container = undefined;
+  mobileViewport = false;
   localStorage.clear();
   await new Promise<void>((resolve) => (server ? server.close(() => resolve()) : resolve()));
   server = undefined;
@@ -122,7 +130,7 @@ describe('mount', () => {
     await tick();
     flushSync();
 
-    expect(container!.querySelector('.layout > .try')).toBeTruthy();
+    expect(container!.querySelector('.strip > .try')).toBeTruthy();
     const previewText = () => container!.querySelector('.preview')?.textContent ?? '';
     const previewButton = (text: string) =>
       [...container!.querySelectorAll<HTMLButtonElement>('.preview .toggle button')].find(
@@ -238,6 +246,203 @@ describe('mount', () => {
     await tick(250);
     flushSync();
     expect(itemCount()).toBe(2);
+    handle.destroy();
+  });
+});
+
+describe('mobile pager', () => {
+  const click = (element: Element) => element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+  function touch(type: string, x: number, y: number): Event {
+    const event = new MouseEvent(type, { bubbles: true, clientX: x, clientY: y });
+    Object.defineProperty(event, 'pointerId', { value: 1 });
+    Object.defineProperty(event, 'pointerType', { value: 'touch' });
+    return event;
+  }
+
+  async function mountMobile(options: Parameters<typeof mount>[1] = { spec }) {
+    mobileViewport = true;
+    const handle = mount(host(), options);
+    await tick();
+    flushSync();
+    return handle;
+  }
+
+  const paneOf = () => container!.querySelector<HTMLElement>('.layout')!.style.getPropertyValue('--pane');
+
+  function swipe(fromX: number, toX: number) {
+    const layout = container!.querySelector<HTMLElement>('.layout')!;
+    Object.defineProperty(container!.querySelector('.strip')!, 'clientWidth', { value: 400, configurable: true });
+    layout.dispatchEvent(touch('pointerdown', fromX, 100));
+    layout.dispatchEvent(touch('pointermove', fromX + (toX - fromX) / 2, 100));
+    layout.dispatchEvent(touch('pointermove', toX, 100));
+    layout.dispatchEvent(touch('pointerup', toX, 100));
+  }
+
+  it('starts on the docs pane and navigates via toolbar, collapse and back buttons', async () => {
+    const handle = await mountMobile();
+    expect(paneOf()).toBe('1');
+    expect(container!.querySelector('.mobile-bar')).toBeTruthy();
+    expect(container!.querySelector('.try .back')).toBeTruthy();
+
+    const barButton = (label: string) =>
+      [...container!.querySelectorAll<HTMLButtonElement>('.mobile-bar button')].find(
+        (button) => button.textContent?.includes(label) || button.getAttribute('aria-label') === label
+      )!;
+
+    click(barButton('Try it'));
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('2');
+
+    click(container!.querySelector('.try .back')!);
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('1');
+
+    click(barButton('Show methods'));
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('0');
+
+    click(container!.querySelector('.collapse')!);
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('1');
+    expect(container!.querySelector('.rail')).toBeNull();
+    handle.destroy();
+  });
+
+  it('returns to the docs pane when a method is picked in the sidebar', async () => {
+    const handle = await mountMobile();
+    click(container!.querySelector('.mobile-bar button')!);
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('0');
+
+    const ping = [...container!.querySelectorAll<HTMLButtonElement>('nav .item')].find((button) =>
+      button.textContent?.includes('ping')
+    )!;
+    click(ping);
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('1');
+    expect(container!.querySelector('.content h2 code')?.textContent).toBe('ping');
+    handle.destroy();
+  });
+
+  it('swipes between the three panes and clamps at the edges', async () => {
+    const handle = await mountMobile();
+    swipe(300, 100);
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('2');
+
+    swipe(300, 100);
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('2');
+
+    swipe(100, 300);
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('1');
+
+    swipe(100, 300);
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('0');
+
+    swipe(100, 300);
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('0');
+    handle.destroy();
+  });
+
+  it('ignores vertical drags, taps and mouse gestures', async () => {
+    const handle = await mountMobile();
+    const layout = container!.querySelector<HTMLElement>('.layout')!;
+    Object.defineProperty(container!.querySelector('.strip')!, 'clientWidth', { value: 400, configurable: true });
+
+    layout.dispatchEvent(touch('pointerdown', 200, 100));
+    layout.dispatchEvent(touch('pointermove', 205, 260));
+    layout.dispatchEvent(touch('pointerup', 205, 260));
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('1');
+
+    layout.dispatchEvent(touch('pointerdown', 200, 100));
+    layout.dispatchEvent(touch('pointermove', 196, 100));
+    layout.dispatchEvent(touch('pointerup', 196, 100));
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('1');
+
+    const mouse = (type: string, x: number) => {
+      const event = new MouseEvent(type, { bubbles: true, clientX: x, clientY: 100 });
+      Object.defineProperty(event, 'pointerId', { value: 1 });
+      Object.defineProperty(event, 'pointerType', { value: 'mouse' });
+      return event;
+    };
+    layout.dispatchEvent(mouse('pointerdown', 300));
+    layout.dispatchEvent(mouse('pointermove', 100));
+    layout.dispatchEvent(mouse('pointerup', 100));
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('1');
+    handle.destroy();
+  });
+
+  it('requires deliberate horizontal intent and starts the drag without a jump', async () => {
+    const handle = await mountMobile();
+    const layout = container!.querySelector<HTMLElement>('.layout')!;
+    Object.defineProperty(container!.querySelector('.strip')!, 'clientWidth', { value: 400, configurable: true });
+    const drag = () => layout.style.getPropertyValue('--drag');
+
+    layout.dispatchEvent(touch('pointerdown', 200, 100));
+    layout.dispatchEvent(touch('pointermove', 214, 104));
+    await tick();
+    flushSync();
+    expect(drag()).toBe('0px');
+    expect(layout.classList.contains('swiping')).toBe(false);
+
+    layout.dispatchEvent(touch('pointermove', 216, 140));
+    layout.dispatchEvent(touch('pointermove', 260, 150));
+    layout.dispatchEvent(touch('pointerup', 260, 150));
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('1');
+    expect(drag()).toBe('0px');
+
+    layout.dispatchEvent(touch('pointerdown', 300, 100));
+    layout.dispatchEvent(touch('pointermove', 270, 100));
+    await tick();
+    flushSync();
+    expect(layout.classList.contains('swiping')).toBe(true);
+    expect(drag()).toBe('0px');
+
+    layout.dispatchEvent(touch('pointermove', 250, 100));
+    await tick();
+    flushSync();
+    expect(parseFloat(drag())).toBeCloseTo(-20, 5);
+
+    layout.dispatchEvent(touch('pointerup', 250, 100));
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('1');
+    expect(drag()).toBe('0px');
+    handle.destroy();
+  });
+
+  it('has no try pane when tryIt is disabled', async () => {
+    const handle = await mountMobile({ spec, tryIt: false });
+    expect(container!.querySelector('.mobile-bar .m-try')).toBeNull();
+    expect(container!.querySelector('.try')).toBeNull();
+    swipe(300, 100);
+    await tick();
+    flushSync();
+    expect(paneOf()).toBe('1');
     handle.destroy();
   });
 });

@@ -82,6 +82,8 @@
     margin: 0;
     padding: 12px 14px;
     overflow-x: auto;
+    /* horizontal code scrolling wins over the mobile pane swipe */
+    touch-action: pan-x pan-y;
     font-family: var(--clef-mono);
     font-size: 12.5px;
     line-height: 1.6;

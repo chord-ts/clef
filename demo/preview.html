@@ -21,6 +21,7 @@
         background: #f2f3f7;
       }
       .toolbar {
+        position: relative;
         display: flex;
         gap: 12px;
         align-items: center;
@@ -204,6 +205,54 @@
         transform: rotate(-25deg);
         opacity: 0;
       }
+      .more {
+        display: none;
+      }
+      .menu {
+        display: none;
+      }
+      @media (max-width: 900px) {
+        .more {
+          display: flex;
+        }
+        .menu {
+          position: absolute;
+          top: calc(100% + 6px);
+          right: 12px;
+          z-index: 20;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 12px;
+          padding: 14px;
+          min-width: 230px;
+          background: #151a24;
+          border: 1px solid #262e3d;
+          border-radius: 10px;
+          box-shadow: 0 12px 32px rgb(0 0 0 / 0.35);
+        }
+        .toolbar.open .menu {
+          display: flex;
+          animation: menu-pop 160ms cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .menu .badge {
+          align-self: flex-start;
+        }
+        .menu label {
+          width: 100%;
+        }
+        .menu select {
+          flex: 1;
+        }
+        .menu #remount {
+          justify-content: center;
+        }
+      }
+      @keyframes menu-pop {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+      }
       #app {
         flex: 1;
         min-height: 0;
@@ -222,6 +271,9 @@
         #remount:active,
         .theme-toggle:active {
           transform: none;
+        }
+        .toolbar.open .menu {
+          animation: none;
         }
       }
     </style>
@@ -306,6 +358,22 @@
           Remount
         </button>
       </div>
+      <button
+        id="more"
+        type="button"
+        class="theme-toggle more"
+        aria-expanded="false"
+        aria-controls="menu"
+        aria-label="More options"
+        title="More options"
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <circle cx="3.2" cy="8" r="1.5" fill="currentColor" />
+          <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+          <circle cx="12.8" cy="8" r="1.5" fill="currentColor" />
+        </svg>
+      </button>
+      <div class="menu" id="menu"></div>
     </div>
     <div id="app"></div>
 
@@ -314,6 +382,15 @@
       const app = document.getElementById('app');
       const sourceSel = document.getElementById('source');
       const themeBtn = document.getElementById('theme');
+      const remountBtn = document.getElementById('remount');
+      const toolbar = document.querySelector('.toolbar');
+      const moreBtn = document.getElementById('more');
+      const menu = document.getElementById('menu');
+      const brand = document.querySelector('.brand');
+      const badge = document.querySelector('.badge');
+      const controls = document.querySelector('.controls');
+      const sourceLabel = sourceSel.closest('label');
+      const mobileMq = matchMedia('(max-width: 900px)');
       const modes = ['auto', 'light', 'dark'];
       let theme = 'auto';
       let handle = null;
@@ -353,12 +430,51 @@
         handle = clef.mount(app, currentOptions);
       }
 
+      function closeMenu() {
+        toolbar.classList.remove('open');
+        moreBtn.setAttribute('aria-expanded', 'false');
+      }
+
+      // same nodes on both layouts, so listeners survive the move into the popover
+      function placeControls() {
+        closeMenu();
+        if (mobileMq.matches) {
+          menu.append(badge, sourceLabel, remountBtn);
+        } else {
+          brand.append(badge);
+          controls.insertBefore(sourceLabel, themeBtn);
+          controls.append(remountBtn);
+        }
+      }
+
+      moreBtn.addEventListener('click', () => {
+        const open = toolbar.classList.toggle('open');
+        moreBtn.setAttribute('aria-expanded', String(open));
+      });
+      document.addEventListener('pointerdown', (event) => {
+        if (!menu.contains(event.target) && !moreBtn.contains(event.target)) closeMenu();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && toolbar.classList.contains('open')) {
+          closeMenu();
+          moreBtn.focus();
+        }
+      });
+      mobileMq.addEventListener('change', placeControls);
+
       themeBtn.addEventListener('click', () => {
         theme = modes[(modes.indexOf(theme) + 1) % modes.length];
         applyTheme();
       });
-      sourceSel.addEventListener('change', remount);
-      document.getElementById('remount').addEventListener('click', remount);
+      sourceSel.addEventListener('change', () => {
+        closeMenu();
+        remount();
+      });
+      remountBtn.addEventListener('click', () => {
+        closeMenu();
+        remount();
+      });
+      placeControls();
       applyTheme();
       remount();
     </script>
