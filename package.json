@@ -1,7 +1,7 @@
 {
   "name": "@chord-ts/clef",
   "version": "0.1.0",
-  "description": "Embeddable OpenRPC reference & console — Swagger UI for JSON-RPC. One self-contained CDN file, Svelte 5 inside.",
+  "description": "🐸 Embeddable OpenRPC reference & console — Swagger UI for JSON-RPC. One self-contained CDN file, Svelte 5 inside.",
   "type": "module",
   "license": "MIT",
   "packageManager": "pnpm@12.5.1",
