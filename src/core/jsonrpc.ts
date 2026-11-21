@@ -35,7 +35,8 @@ export async function callRpc(
   method: string,
   params?: unknown,
   transport: Transport = 'http',
-  timeoutMs = 15000
+  timeoutMs = 15000,
+  headers: Record<string, string> = {}
 ): Promise<RpcOutcome> {
   const request = buildRequest(method, params);
   const started = performance.now();
@@ -43,7 +44,7 @@ export async function callRpc(
     const response =
       transport === 'websocket'
         ? await wsCall(endpoint, request, timeoutMs)
-        : await httpCall(endpoint, request, timeoutMs);
+        : await httpCall(endpoint, request, timeoutMs, headers);
     return settle(request, response, started);
   } catch (cause) {
     return {
@@ -71,10 +72,15 @@ function settle(request: RpcRequest, response: unknown, started: number): RpcOut
   return { request, result: res.result, durationMs };
 }
 
-async function httpCall(endpoint: string, request: RpcRequest, timeoutMs: number): Promise<unknown> {
+async function httpCall(
+  endpoint: string,
+  request: RpcRequest,
+  timeoutMs: number,
+  headers: Record<string, string>
+): Promise<unknown> {
   const response = await fetch(endpoint, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { ...headers, 'content-type': 'application/json' },
     body: JSON.stringify(request),
     signal: AbortSignal.timeout(timeoutMs)
   });

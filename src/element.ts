@@ -8,6 +8,7 @@ class ClefDocsElement extends HTMLElement {
 
   #handle: ClefHandle | null = null;
   #spec: MountOptions['spec'] = undefined;
+  #auth: MountOptions['auth'] = undefined;
 
   connectedCallback(): void {
     this.#handle ??= mount(this, this.#options());
@@ -31,6 +32,15 @@ class ClefDocsElement extends HTMLElement {
     this.#handle?.update(this.#options());
   }
 
+  get auth(): MountOptions['auth'] {
+    return this.#auth;
+  }
+
+  set auth(value: MountOptions['auth']) {
+    this.#auth = value;
+    this.#handle?.update(this.#options());
+  }
+
   #options(): MountOptions {
     const attr = (name: string): string | null => this.getAttribute(name);
     const specAttr = attr('spec');
@@ -41,7 +51,8 @@ class ClefDocsElement extends HTMLElement {
       transport: (attr('transport') as Transport | null) ?? undefined,
       theme: (attr('theme') as Theme | null) ?? undefined,
       tryIt: this.hasAttribute('try-it') ? attr('try-it') !== 'false' : undefined,
-      icon: attr('icon') ?? undefined
+      icon: attr('icon') ?? undefined,
+      auth: this.#auth
     };
   }
 }

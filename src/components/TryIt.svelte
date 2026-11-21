@@ -1,23 +1,28 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { callRpc, type RpcOutcome, type Transport } from '../core/jsonrpc';
+  import { authHeaders } from '../core/auth';
   import { exampleParams, paramsByName, resolveDescriptor } from '../core/examples';
   import { safeDeref, typeLabel } from '../ui/format';
   import type { MethodObject, OpenRPCDocument, SchemaObject } from '../core/types';
-  import type { MountOptions } from '../public';
+  import type { AuthSettings, MountOptions } from '../public';
   import CodeBlock from './CodeBlock.svelte';
 
   let {
     doc,
     method,
     options,
+    auth,
     onback
   }: {
     doc: OpenRPCDocument;
     method: MethodObject;
     options: MountOptions;
+    auth?: AuthSettings;
     onback?: () => void;
   } = $props();
+
+  const headers = $derived(authHeaders(auth));
 
   type Kind = 'text' | 'number' | 'boolean' | 'enum' | 'json';
 
@@ -150,7 +155,10 @@
   const curlSnippet = $derived.by(() => {
     if (!preview) return '';
     const url = endpoint.trim() || '<endpoint>';
-    return `curl -X POST ${shellQuote(url)} \\\n  -H 'Content-Type: application/json' \\\n  -d ${shellQuote(JSON.stringify(preview))}`;
+    const authLines = Object.entries(headers)
+      .map(([name, value]) => ` \\\n  -H ${shellQuote(`${name}: ${value}`)}`)
+      .join('');
+    return `curl -X POST ${shellQuote(url)} \\\n  -H 'Content-Type: application/json'${authLines} \\\n  -d ${shellQuote(JSON.stringify(preview))}`;
   });
 
   const jsSnippet = $derived.by(() => {
@@ -161,7 +169,10 @@
       const wsUrl = url.replace(/^http/, 'ws');
       return `const socket = new WebSocket(${JSON.stringify(wsUrl)});\nsocket.onopen = () => socket.send(JSON.stringify(${request}));\nsocket.onmessage = (event) => {\n  const { result, error } = JSON.parse(event.data);\n  socket.close();\n};`;
     }
-    return `const response = await fetch(${JSON.stringify(url)}, {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify(${request})\n});\nconst { result, error } = await response.json();`;
+    const authEntries = Object.entries(headers)
+      .map(([name, value]) => `, ${JSON.stringify(name)}: ${JSON.stringify(value)}`)
+      .join('');
+    return `const response = await fetch(${JSON.stringify(url)}, {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json'${authEntries} },\n  body: JSON.stringify(${request})\n});\nconst { result, error } = await response.json();`;
   });
 
   async function execute() {
@@ -179,7 +190,7 @@
     }
     running = true;
     outcome = null;
-    outcome = await callRpc(endpoint.trim(), method.name, params, transport, options.requestTimeoutMs);
+    outcome = await callRpc(endpoint.trim(), method.name, params, transport, options.requestTimeoutMs, headers);
     running = false;
   }
 </script>

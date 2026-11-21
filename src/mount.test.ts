@@ -110,6 +110,59 @@ describe('mount', () => {
     handle.destroy();
   });
 
+  it('toolbar theme toggle cycles and persists the choice', async () => {
+    const handle = mount(host(), { spec });
+    await tick();
+    flushSync();
+    const toggle = container!.querySelector('.toolbar button[data-mode]') as HTMLButtonElement;
+    expect(toggle.dataset.mode).toBe('auto');
+    toggle.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
+    expect(toggle.dataset.mode).toBe('light');
+    toggle.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
+    expect(toggle.dataset.mode).toBe('dark');
+    expect(JSON.parse(localStorage.getItem('clef:theme')!)).toBe('dark');
+    handle.destroy();
+    flushSync();
+    const again = mount(host(), { spec });
+    await tick();
+    flushSync();
+    expect((container!.querySelector('.toolbar button[data-mode]') as HTMLButtonElement).dataset.mode).toBe('dark');
+    again.destroy();
+  });
+
+  it('auth option adds authorization header to executed requests', async () => {
+    let authorization: string | undefined;
+    server = createServer((req, res) => {
+      authorization = req.headers.authorization;
+      let raw = '';
+      req.on('data', (chunk) => (raw += chunk));
+      req.on('end', () => {
+        const request = JSON.parse(raw);
+        res.setHeader('content-type', 'application/json');
+        res.end(JSON.stringify({ jsonrpc: '2.0', id: request.id, result: 'ok' }));
+      });
+    });
+    const url = await new Promise<string>((resolve) => {
+      server!.listen(0, '127.0.0.1', () => {
+        const address = server!.address();
+        resolve(typeof address === 'object' && address ? `http://127.0.0.1:${address.port}/rpc` : '');
+      });
+    });
+    const handle = mount(host(), { spec, endpoint: url, auth: { scheme: 'bearer', token: 'tok' } });
+    await tick();
+    flushSync();
+    const execute = [...container!.querySelectorAll('button')].find(
+      (button) => button.textContent?.trim() === 'Execute'
+    );
+    execute!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await tick(150);
+    flushSync();
+    expect(authorization).toBe('Bearer tok');
+    handle.destroy();
+  });
+
   it('update() swaps the document', async () => {
     const handle = mount(host(), { spec });
     await tick();

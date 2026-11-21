@@ -392,6 +392,7 @@
 
   .brand {
     font-weight: 650;
+    width: fit-content;
     color: var(--clef-accent);
   }
 

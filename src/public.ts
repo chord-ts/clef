@@ -1,7 +1,9 @@
 import type { Transport } from './core/jsonrpc';
+import type { AuthSettings } from './core/auth';
 import type { OpenRPCDocument } from './core/types';
 
-export type { Transport };
+export type { Transport, AuthSettings };
+export type { AuthScheme } from './core/auth';
 
 export type Theme = 'light' | 'dark' | 'auto';
 
@@ -14,6 +16,7 @@ export interface MountOptions {
   tryIt?: boolean;
   requestTimeoutMs?: number;
   icon?: string;
+  auth?: AuthSettings;
 }
 
 export interface ClefHandle {

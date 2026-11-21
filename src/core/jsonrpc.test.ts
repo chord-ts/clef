@@ -76,6 +76,30 @@ describe('callRpc over HTTP', () => {
     expect(outcome.error?.code).toBe(TRANSPORT_ERROR);
   });
 
+  it('sends authorization headers over HTTP', async () => {
+    let received: import('node:http').IncomingHttpHeaders = {};
+    server = createServer((req, res) => {
+      received = req.headers;
+      let raw = '';
+      req.on('data', (chunk) => (raw += chunk));
+      req.on('end', () => {
+        const body = JSON.parse(raw);
+        res.setHeader('content-type', 'application/json');
+        res.end(JSON.stringify({ jsonrpc: '2.0', id: body.id, result: true }));
+      });
+    });
+    const url = await new Promise<string>((resolve) => {
+      server!.listen(0, '127.0.0.1', () => {
+        const address = server!.address();
+        resolve(typeof address === 'object' && address ? `http://127.0.0.1:${address.port}/rpc` : '');
+      });
+    });
+    const outcome = await callRpc(url, 'echo', undefined, 'http', 5000, { Authorization: 'Bearer tok' });
+    expect(outcome.error).toBeUndefined();
+    expect(received.authorization).toBe('Bearer tok');
+    expect(received['content-type']).toBe('application/json');
+  });
+
   it('rejects id mismatches', async () => {
     const url = await listen((_body, res) => {
       res.end(JSON.stringify({ jsonrpc: '2.0', id: 999999, result: 'wrong' }));

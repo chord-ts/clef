@@ -1,11 +1,13 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { loadDocument } from '../core/loader';
+  import { authHeaders } from '../core/auth';
   import type { OpenRPCDocument } from '../core/types';
-  import type { MountOptions } from '../public';
+  import type { AuthSettings, MountOptions, Theme } from '../public';
   import Sidebar from './Sidebar.svelte';
   import MethodView from './MethodView.svelte';
   import TryIt from './TryIt.svelte';
+  import Toolbar from './Toolbar.svelte';
 
   let { options }: { options: MountOptions } = $props();
 
@@ -31,11 +33,56 @@
     }
   }
 
+  function readStored<T>(key: string): T | undefined {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? (JSON.parse(raw) as T) : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  const THEMES: Theme[] = ['auto', 'light', 'dark'];
+  const storedTheme = readStored<Theme>('clef:theme');
+  let themeChoice = $state<Theme>(
+    untrack(() => options.theme) ?? (storedTheme && THEMES.includes(storedTheme) ? storedTheme : 'auto')
+  );
+  let auth = $state<AuthSettings | undefined>(
+    untrack(() => options.auth) ?? readStored<AuthSettings>('clef:auth')
+  );
+
+  // embedder options override the stored user choice; toolbar edits persist it
+  $effect(() => {
+    if (options.theme !== undefined) themeChoice = options.theme;
+  });
+  $effect(() => {
+    if (options.auth !== undefined) auth = options.auth;
+  });
+
+  function setTheme(next: Theme) {
+    themeChoice = next;
+    try {
+      localStorage.setItem('clef:theme', JSON.stringify(next));
+    } catch {
+      // host page may block storage — theme still applies in memory
+    }
+  }
+
+  function setAuth(next: AuthSettings | undefined) {
+    auth = next;
+    try {
+      if (next) localStorage.setItem('clef:auth', JSON.stringify(next));
+      else localStorage.removeItem('clef:auth');
+    } catch {
+      // host page may block storage — auth still applies in memory
+    }
+  }
+
   const saved = readLayout();
   let sidebarWidth = $state(
     typeof saved.sidebarWidth === 'number' ? clamp(saved.sidebarWidth, 180, 480) : DEFAULT_SIDEBAR_WIDTH
   );
-  let tryWidth = $state(typeof saved.tryWidth === 'number' ? clamp(saved.tryWidth, 320, 720) : DEFAULT_TRY_WIDTH);
+  let tryWidth = $state(typeof saved.tryWidth === 'number' ? clamp(saved.tryWidth, 320, 960) : DEFAULT_TRY_WIDTH);
   let sidebarCollapsed = $state(false);
   let dragging = $state(false);
 
@@ -65,7 +112,7 @@
     const move = (e: PointerEvent) => {
       const delta = e.clientX - startX;
       if (which === 'sidebar') sidebarWidth = clamp(startWidth + delta, 180, 480);
-      else tryWidth = clamp(startWidth - delta, 320, 720);
+      else tryWidth = clamp(startWidth - delta, 320, 960);
     };
     const up = () => {
       dragging = false;
@@ -84,7 +131,7 @@
     if (step === 0) return;
     event.preventDefault();
     if (which === 'sidebar') sidebarWidth = clamp(sidebarWidth + step, 180, 480);
-    else tryWidth = clamp(tryWidth - step, 320, 720);
+    else tryWidth = clamp(tryWidth - step, 320, 960);
     saveLayout();
   }
 
@@ -177,13 +224,14 @@
   }
 
   const theme = $derived(
-    options.theme === 'dark' || ((options.theme ?? 'auto') === 'auto' && prefersDark) ? 'dark' : 'light'
+    themeChoice === 'dark' || (themeChoice === 'auto' && prefersDark) ? 'dark' : 'light'
   );
+  const headers = $derived(authHeaders(auth));
 
   // key on content, not identity: replacing the options object wraps sources in
   // fresh $state proxies and would reload the document even when unchanged
   const loadKey = $derived(
-    JSON.stringify([options.spec, options.url, options.endpoint, options.transport])
+    JSON.stringify([options.spec, options.url, options.endpoint, options.transport, headers])
   );
 
   $effect(() => {
@@ -194,10 +242,11 @@
       endpoint: options.endpoint,
       transport: options.transport
     }));
+    const requestHeaders = untrack(() => headers);
     const token = ++loadToken;
     loading = true;
     loadError = null;
-    loadDocument(source)
+    loadDocument(source, requestHeaders)
       .then((loaded) => {
         if (token !== loadToken) return;
         doc = loaded;
@@ -227,6 +276,7 @@
 </script>
 
 <div class="clef" data-theme={theme}>
+  <Toolbar theme={themeChoice} ontheme={setTheme} {auth} onauth={setAuth} />
   {#if loading}
     <div class="state">
       <div class="spinner"></div>
@@ -342,7 +392,7 @@
             aria-label="Resize try it"
             aria-valuenow={tryWidth}
             aria-valuemin={320}
-            aria-valuemax={720}
+            aria-valuemax={960}
             onpointerdown={(event) => startDrag(event, 'try')}
             onkeydown={(event) => resizeKey(event, 'try')}
             ondblclick={() => {
@@ -352,7 +402,7 @@
           ></div>
           <div class="try" inert={isMobile && pane !== 2 ? true : undefined}>
             {#key selectedMethod.name}
-              <TryIt {doc} method={selectedMethod} {options} onback={isMobile ? () => (pane = 1) : undefined} />
+              <TryIt {doc} method={selectedMethod} {options} {auth} onback={isMobile ? () => (pane = 1) : undefined} />
             {/key}
           </div>
         {/if}

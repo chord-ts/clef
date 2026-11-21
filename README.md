@@ -7,7 +7,7 @@
 
 **The only clef to your JSON-RPC backend. Your OpenRPC spec, direct — no OpenAPI casting.**
 
-Methods, schemas and errors render exactly as written, and every method executes right from the docs — over HTTP or WebSocket, with ready-made curl and JS snippets. Svelte 5 inside, one self-contained file outside (~44 KB gzip): no React, no MUI, no runtime dependencies.
+Methods, schemas and errors render exactly as written, and every method executes right from the docs — over HTTP or WebSocket, with ready-made curl and JS snippets. Svelte 5 inside, one self-contained file outside (~47 KB gzip): no React, no MUI, no runtime dependencies.
 
 </div>
 
@@ -62,12 +62,15 @@ clef is not on npm yet. Until the first release, serve `dist/clef.iife.js` from 
 | `tryIt` | `false` hides the console, leaving documentation only |
 | `requestTimeoutMs` | request timeout, 15000 by default |
 | `icon` | logo URL for the sidebar header; falls back to `info.x-logo.url` from the spec, then to a neutral document icon |
+| `auth` | authorization for spec fetch and JSON-RPC calls: `{ scheme: 'bearer' \| 'basic' \| 'custom', … }` with token, username/password or header name/value |
 
 The spec source is chosen by priority: `spec` → `url` → `endpoint`. The widget fills its container's height (480px minimum), so give the container an explicit height.
 
+The widget ships its own toolbar: a link to the repository, the library version, a theme toggle (auto → light → dark) and a lock with authorization settings — Bearer token, Basic credentials or a custom header. Theme and authorization are remembered in localStorage; an explicit `theme`/`auth` option from the embedder overrides the stored choice. Authorized headers appear in the curl and JS snippets too.
+
 On narrow screens (≤900px) the columns become three swipeable panels: methods, documentation, Try it. A sidebar-icon button in the docs header jumps left to the method list, a “Try it” button jumps right to the console, and horizontal swipes move between panels as well.
 
-`mount()` returns a handle: `update(options)` replaces options on the fly, `destroy()` removes the widget. `<clef-docs>` takes the same settings as attributes (`url`, `endpoint`, `transport`, `theme`, `try-it`, `icon`, `spec` — a JSON string); an object spec can also be set via the `element.spec` property.
+`mount()` returns a handle: `update(options)` replaces options on the fly, `destroy()` removes the widget. `<clef-docs>` takes the same settings as attributes (`url`, `endpoint`, `transport`, `theme`, `try-it`, `icon`, `spec` — a JSON string); an object spec can also be set via the `element.spec` property, and authorization via `element.auth`.
 
 ## Demo
 
@@ -75,7 +78,7 @@ On narrow screens (≤900px) the columns become three swipeable panels: methods,
 pnpm demo:server
 ```
 
-Starts a mock JSON-RPC server at http://localhost:4000 with a page built on the bundled file: switch spec sources (url / rpc.discover / inline / web component) and themes. Every method in the demo spec really executes, including over WebSocket.
+Starts a mock JSON-RPC server at http://localhost:4000 and serves a page built on the bundled file — the widget itself, toolbar included. Every method in the demo spec really executes, including over WebSocket. The four ways to load clef (url, rpc.discover, inline, web component) are shown in `examples/`.
 
 For development with HMR: `pnpm dev` → http://localhost:5173/demo/ (the demo server must be running).
 
@@ -111,6 +114,7 @@ The brand kit (symbol, lockup, mono versions, favicons and app icons) lives in `
 - `$ref` resolves internal references (`#/components/...`) only; external links are not fetched.
 - Descriptions render as plain text, without Markdown.
 - The WebSocket transport opens a separate connection per request.
+- Authorization headers apply to HTTP only — browsers cannot set headers on a WebSocket handshake.
 - Cross-origin Try it requests require CORS headers on the endpoint.
 
 ## License

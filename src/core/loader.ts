@@ -8,21 +8,31 @@ export interface DocumentSource {
   transport?: Transport;
 }
 
-export async function loadDocument(source: DocumentSource): Promise<OpenRPCDocument> {
+export async function loadDocument(
+  source: DocumentSource,
+  headers: Record<string, string> = {}
+): Promise<OpenRPCDocument> {
   if (source.spec !== undefined && source.spec !== null) {
     const parsed = typeof source.spec === 'string' ? parseJson(source.spec, 'spec') : source.spec;
     assertDocument(parsed);
     return parsed;
   }
   if (source.url) {
-    const response = await fetch(source.url);
+    const response = await fetch(source.url, { headers });
     if (!response.ok) throw new Error(`clef: failed to fetch ${source.url} — HTTP ${response.status}`);
     const parsed = parseJson(await response.text(), source.url);
     assertDocument(parsed);
     return parsed;
   }
   if (source.endpoint) {
-    const outcome = await callRpc(source.endpoint, 'rpc.discover', undefined, source.transport ?? 'http');
+    const outcome = await callRpc(
+      source.endpoint,
+      'rpc.discover',
+      undefined,
+      source.transport ?? 'http',
+      15000,
+      headers
+    );
     if (outcome.error) {
       throw new Error(`clef: rpc.discover at ${source.endpoint} failed — ${outcome.error.message}`);
     }
