@@ -111,7 +111,6 @@ pnpm build    # dist bundles + types + demo-dist static for the hosted demo
 
 The core (`src/core`) does not depend on Svelte: the spec loader, `$ref` resolution, the JSON-RPC client and example generation from JSON Schema are tested separately from the UI. Components (`src/components`) use Svelte 5 runes; styles are inlined into the bundle at build time.
 
-The brand kit (symbol, lockup, mono versions, favicons and app icons) lives in `assets/` and is copied to `dist/assets/` at build time, so it ships inside the npm package alongside the bundle. Usage rules: `logo/GUIDELINES.md`.
 
 ## Limitations
 
