@@ -8,12 +8,18 @@ importers:
 
   .:
     devDependencies:
+      '@hono/vercel':
+        specifier: ^1.0.1
+        version: 1.0.1(hono@4.13.19)
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.3.1
         version: 7.3.1(svelte@5.59.1)(vite@8.3.8(@types/node@26.6.6))
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.2
+      hono:
+        specifier: ^4.13.19
+        version: 4.13.19
       jsdom:
         specifier: ^31.0.1
         version: 31.0.1
@@ -58,6 +64,12 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
+
+  '@hono/vercel@1.0.1':
+    resolution: {integrity: sha512-2g9P7VOHB7k99t20vZd6Mv8Pvq/PwgTYI29NBgDPohUy4KNceylHW7hCSrD7Q8XrbFo0p+Na2ScymTFDCRX3Uw==}
+    engines: {node: '>=16.9.0'}
+    peerDependencies:
+      hono: '>=4.13.9 || ^5.0.0-0'
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -328,6 +340,10 @@ packages:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
+
+  hono@4.13.19:
+    resolution: {integrity: sha512-KmXvQAXwcAHV+muzbIwoJ23niEB5nMoDVr9WcRkU8mvjUECm/1+7v4Jgp7P7a+H6MLFrh+vXrGonGrGS+RQfkA==}
+    engines: {node: '>=16.9.0'}
 
   html-encoding-sniffer@7.0.0:
     resolution: {integrity: sha512-UikN5yr7xsCDAq87Or5or0PAlD3HJJOKVzM05az588WnpDJ4Ux7a2A53Qi6gofGg2/EtvF/H4hCi/TXfCW4Y6w==}
@@ -720,6 +736,10 @@ snapshots:
 
   '@exodus/bytes@1.16.0': {}
 
+  '@hono/vercel@1.0.1(hono@4.13.19)':
+    dependencies:
+      hono: 4.13.19
+
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
@@ -911,6 +931,8 @@ snapshots:
 
   fsevents@2.3.3:
     optional: true
+
+  hono@4.13.19: {}
 
   html-encoding-sniffer@7.0.0:
     dependencies:

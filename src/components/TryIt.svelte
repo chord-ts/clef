@@ -23,6 +23,12 @@
   } = $props();
 
   const headers = $derived(authHeaders(auth));
+  const allowedTransports = $derived.by(() => {
+    const list = (options.transports ?? []).filter(
+      (value, index, all) => (value === 'http' || value === 'websocket') && all.indexOf(value) === index
+    );
+    return list.length ? list : (['http', 'websocket'] as Transport[]);
+  });
 
   type Kind = 'text' | 'number' | 'boolean' | 'enum' | 'json';
 
@@ -77,7 +83,8 @@
 
   $effect(() => {
     endpoint = options.endpoint ?? doc.servers?.[0]?.url ?? untrack(() => endpoint);
-    transport = options.transport ?? untrack(() => transport);
+    const preferred = options.transport ?? untrack(() => transport);
+    transport = allowedTransports.includes(preferred) ? preferred : allowedTransports[0];
   });
 
   function collectParams(): unknown {
@@ -218,8 +225,8 @@
     <label class="field">
       <span class="label">Transport</span>
       <select bind:value={transport}>
-        <option value="http">HTTP</option>
-        <option value="websocket">WebSocket</option>
+        {#if allowedTransports.includes('http')}<option value="http">HTTP</option>{/if}
+        {#if allowedTransports.includes('websocket')}<option value="websocket">WebSocket</option>{/if}
       </select>
     </label>
     <div class="field">

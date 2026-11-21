@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>clef — OpenRPC demo (built bundle)</title>
+    <title>Clef — OpenRPC demo (built bundle)</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='56 12 144 232'%3E%3Cpolygon points='56,20.5 185,94.98 199.74,86.47 70.74,11.99' fill='%232DD4BF'/%3E%3Cpolygon points='185,94.98 185,120.52 199.74,112.01 199.74,86.47' fill='%230F766E'/%3E%3Cpolygon points='78.11,58.8 78.11,156.69 92.85,148.18 92.85,50.29' fill='%230F766E'/%3E%3Cpolygon points='78.11,156.69 185,218.4 199.74,209.89 92.85,148.18' fill='%232DD4BF'/%3E%3Cpolygon points='185,218.4 185,243.94 199.74,235.43 199.74,209.89' fill='%230F766E'/%3E%3Cpolygon points='56,20.5 185,94.98 185,120.52 78.11,58.8 78.11,156.69 185,218.4 185,243.94 56,169.46' fill='%230D9488'/%3E%3Cpolygon points='95.62,88.6 120.96,132.49 95.62,147.12 115.89,158.82 141.23,144.19 115.89,100.3' fill='%23F59E0B'/%3E%3Cpolygon points='151.83,155.63 188.69,176.91 188.69,200.32 151.83,179.04' fill='%23F59E0B'/%3E%3C/svg%3E"
@@ -23,10 +23,15 @@
     <div id="app"></div>
     <script src="/dist/clef.iife.js"></script>
     <script>
-      clef.mount('#app', {
-        url: location.origin + '/openrpc.json',
-        endpoint: location.origin + '/rpc'
-      });
+      // Vercel serverless cannot hold WebSocket connections; the local demo keeps both.
+      // Hosted: spec (rpc.discover) and calls are all served by the Hono function.
+      const hosted = !['localhost', '127.0.0.1'].includes(location.hostname);
+      clef.mount(
+        '#app',
+        hosted
+          ? { endpoint: location.origin + '/api/rpc', transports: ['http'] }
+          : { url: location.origin + '/openrpc.json', endpoint: location.origin + '/rpc' }
+      );
     </script>
   </body>
 </html>

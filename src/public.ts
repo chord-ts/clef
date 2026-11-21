@@ -12,6 +12,7 @@ export interface MountOptions {
   url?: string;
   endpoint?: string;
   transport?: Transport;
+  transports?: Transport[];
   theme?: Theme;
   tryIt?: boolean;
   requestTimeoutMs?: number;

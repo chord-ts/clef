@@ -4,6 +4,9 @@
   "description": "Embeddable OpenRPC reference & console — Swagger UI for JSON-RPC. One self-contained CDN file, Svelte 5 inside.",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chord-ts/clef.git"
@@ -47,7 +50,7 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build -c vite.svelte.config.ts && tsc -p tsconfig.build.json",
+    "build": "vite build && vite build -c vite.svelte.config.ts && tsc -p tsconfig.build.json && node scripts/prepare-demo.mjs",
     "preview": "vite preview",
     "demo:server": "node demo/server.mjs",
     "check": "svelte-check --tsconfig ./tsconfig.json",
@@ -55,8 +58,10 @@
     "prepublishOnly": "pnpm check && pnpm test && pnpm build"
   },
   "devDependencies": {
+    "@hono/vercel": "^1.0.1",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@types/ws": "^8.18.1",
+    "hono": "^4.13.19",
     "jsdom": "^31.0.1",
     "svelte": "^5.59.1",
     "svelte-check": "^4.7.8",

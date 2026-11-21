@@ -163,6 +163,15 @@ describe('mount', () => {
     handle.destroy();
   });
 
+  it('transports option restricts the transport select', async () => {
+    const handle = mount(host(), { spec, transports: ['http'] });
+    await tick();
+    flushSync();
+    const select = container!.querySelector('.tryit select') as HTMLSelectElement;
+    expect([...select.options].map((option) => option.value)).toEqual(['http']);
+    handle.destroy();
+  });
+
   it('update() swaps the document', async () => {
     const handle = mount(host(), { spec });
     await tick();
