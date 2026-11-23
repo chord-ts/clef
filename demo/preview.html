@@ -14,24 +14,288 @@
         height: 100%;
         margin: 0;
       }
+      body {
+        display: flex;
+        flex-direction: column;
+        background: #0a0d11;
+      }
+      .demo-bar {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: #0e1116;
+        border-bottom: 1px solid #262e3d;
+        color: #98a2b8;
+        font: 13px/1.2 system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        color-scheme: dark;
+      }
+      .demo-bar select {
+        font: inherit;
+        min-width: 0;
+        color: #e7eaf0;
+        background: #1c2230;
+        border: 1px solid #262e3d;
+        border-radius: 8px;
+        padding: 5px 8px;
+      }
+      .demo-bar button {
+        font: inherit;
+        flex: none;
+        color: #e7eaf0;
+        background: #1c2230;
+        border: 1px solid #262e3d;
+        border-radius: 8px;
+        padding: 5px 10px;
+        cursor: pointer;
+        transition:
+          border-color 160ms ease,
+          transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      .demo-bar button:hover {
+        border-color: #2dd4bf;
+      }
+      .demo-bar button:active {
+        transform: scale(0.97);
+      }
+      .demo-bar select:focus-visible,
+      .demo-bar button:focus-visible {
+        outline: 2px solid #2dd4bf;
+        outline-offset: 1px;
+      }
       #app {
-        height: 100%;
+        flex: 1;
+        min-height: 0;
+      }
+      #custom-dialog {
+        width: min(680px, calc(100vw - 32px));
+        max-height: calc(100vh - 48px);
+        padding: 16px;
+        background: #0e1116;
+        color: #e7eaf0;
+        border: 1px solid #262e3d;
+        border-radius: 12px;
+        color-scheme: dark;
+        font: 13px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      }
+      #custom-dialog[open] {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        animation: dialog-pop 160ms cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      #custom-dialog::backdrop {
+        background: rgb(4 8 12 / 0.6);
+        animation: backdrop-fade 160ms ease;
+      }
+      .custom-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .custom-head h2 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .custom-head button {
+        font: inherit;
+        color: #98a2b8;
+        background: none;
+        border: none;
+        border-radius: 6px;
+        padding: 2px 8px;
+        cursor: pointer;
+      }
+      .custom-head button:hover {
+        color: #e7eaf0;
+      }
+      .custom-hint {
+        margin: 0;
+        color: #98a2b8;
+      }
+      #custom-text {
+        flex: 1;
+        min-height: 220px;
+        resize: vertical;
+        font: 12.5px/1.6 ui-monospace, 'Cascadia Code', Consolas, 'Liberation Mono', monospace;
+        color: #e7eaf0;
+        background: #0a0d11;
+        border: 1px solid #262e3d;
+        border-radius: 8px;
+        padding: 10px;
+        tab-size: 2;
+      }
+      #custom-text:focus-visible {
+        outline: 2px solid #2dd4bf;
+        outline-offset: 1px;
+      }
+      .custom-error {
+        margin: 0;
+        color: #f87171;
+      }
+      .custom-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .custom-actions button {
+        font: inherit;
+        border-radius: 8px;
+        padding: 6px 14px;
+        cursor: pointer;
+        transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      .custom-actions button:active {
+        transform: scale(0.97);
+      }
+      #custom-cancel {
+        color: #e7eaf0;
+        background: none;
+        border: 1px solid #262e3d;
+      }
+      #custom-load {
+        color: #062a26;
+        background: #2dd4bf;
+        border: none;
+        font-weight: 600;
+      }
+      @keyframes dialog-pop {
+        from {
+          opacity: 0;
+          transform: translateY(6px) scale(0.98);
+        }
+      }
+      @keyframes backdrop-fade {
+        from {
+          opacity: 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .demo-bar button,
+        .custom-actions button {
+          transition: none;
+        }
+        .demo-bar button:active,
+        .custom-actions button:active {
+          transform: none;
+        }
+        #custom-dialog[open],
+        #custom-dialog::backdrop {
+          animation: none;
+        }
       }
     </style>
   </head>
   <body>
+    <div class="demo-bar">
+      <label for="schema">Schema</label>
+      <select id="schema">
+        <option value="local" selected>Local demo (mock)</option>
+      </select>
+      <button id="custom-open" type="button" title="Paste your own OpenRPC document">Custom schema</button>
+    </div>
     <div id="app"></div>
+    <dialog id="custom-dialog" aria-labelledby="custom-title">
+      <div class="custom-head">
+        <h2 id="custom-title">Custom schema</h2>
+        <button id="custom-close" type="button" aria-label="Close">✕</button>
+      </div>
+      <p class="custom-hint">Paste an OpenRPC document as JSON. Try it will use its servers[0].url.</p>
+      <textarea
+        id="custom-text"
+        spellcheck="false"
+        autofocus
+        placeholder='{ "openrpc": "1.2.6", "info": { "title": "My API", "version": "1.0.0" }, "methods": [] }'
+      ></textarea>
+      <p id="custom-error" class="custom-error" hidden></p>
+      <div class="custom-actions">
+        <button id="custom-cancel" type="button">Cancel</button>
+        <button id="custom-load" type="button">Load</button>
+      </div>
+    </dialog>
     <script src="/dist/clef.iife.js"></script>
     <script>
       // Vercel serverless cannot hold WebSocket connections; the local demo keeps both.
       // Hosted: spec (rpc.discover) and calls are all served by the Hono function.
       const hosted = !['localhost', '127.0.0.1'].includes(location.hostname);
-      clef.mount(
-        '#app',
-        hosted
-          ? { endpoint: location.origin + '/api/rpc', transports: ['http'] }
-          : { url: location.origin + '/openrpc.json', endpoint: location.origin + '/rpc' }
-      );
+      const localOptions = hosted
+        ? { endpoint: location.origin + '/api/rpc', transports: ['http'] }
+        : { url: location.origin + '/openrpc.json', endpoint: location.origin + '/rpc' };
+      const handle = clef.mount('#app', localOptions);
+
+      // The example documents shipped in playground.open-rpc.org's dropdown
+      // (open-rpc/playground, src/examplesList.tsx). No live servers behind them:
+      // Try it falls back to each spec's own servers[0].url.
+      const examples = [
+        ['api-with-examples', 'https://raw.githubusercontent.com/open-rpc/examples/master/service-descriptions/api-with-examples-openrpc.json'],
+        ['link-example', 'https://raw.githubusercontent.com/open-rpc/examples/master/service-descriptions/link-example-openrpc.json'],
+        ['params-by-name-petstore', 'https://raw.githubusercontent.com/open-rpc/examples/master/service-descriptions/params-by-name-petstore-openrpc.json'],
+        ['petstore-expanded', 'https://raw.githubusercontent.com/open-rpc/examples/master/service-descriptions/petstore-expanded-openrpc.json'],
+        ['petstore', 'https://raw.githubusercontent.com/open-rpc/examples/master/service-descriptions/petstore-openrpc.json'],
+        ['simple-math', 'https://raw.githubusercontent.com/open-rpc/examples/master/service-descriptions/simple-math-openrpc.json'],
+        ['empty-document', 'https://raw.githubusercontent.com/open-rpc/examples/master/service-descriptions/empty-openrpc.json']
+      ];
+      const select = document.getElementById('schema');
+      for (const [name, url] of examples) {
+        const option = document.createElement('option');
+        option.value = url;
+        option.textContent = name;
+        select.append(option);
+      }
+      let customSpec = null;
+      function applySource() {
+        // update() merges, so clear the previous source explicitly before applying the next one
+        const base = { spec: undefined, url: undefined, endpoint: undefined, transports: undefined };
+        if (select.value === 'local') handle.update({ ...base, ...localOptions });
+        else if (select.value === 'custom') handle.update({ ...base, spec: customSpec });
+        else handle.update({ ...base, url: select.value, transports: ['http'] });
+      }
+      select.addEventListener('change', applySource);
+
+      const dialog = document.getElementById('custom-dialog');
+      const customText = document.getElementById('custom-text');
+      const customError = document.getElementById('custom-error');
+      document.getElementById('custom-open').addEventListener('click', () => {
+        customError.hidden = true;
+        dialog.showModal();
+      });
+      document.getElementById('custom-close').addEventListener('click', () => dialog.close());
+      document.getElementById('custom-cancel').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', (event) => {
+        const rect = dialog.getBoundingClientRect();
+        const outside =
+          event.clientX < rect.left || event.clientX > rect.right ||
+          event.clientY < rect.top || event.clientY > rect.bottom;
+        if (outside) dialog.close();
+      });
+      document.getElementById('custom-load').addEventListener('click', () => {
+        let parsed;
+        try {
+          parsed = JSON.parse(customText.value);
+        } catch (error) {
+          customError.textContent = 'Invalid JSON: ' + error.message;
+          customError.hidden = false;
+          return;
+        }
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+          customError.textContent = 'Expected a JSON object — an OpenRPC document.';
+          customError.hidden = false;
+          return;
+        }
+        customSpec = customText.value;
+        if (![...select.options].some((option) => option.value === 'custom')) {
+          const option = document.createElement('option');
+          option.value = 'custom';
+          option.textContent = 'Custom (pasted)';
+          select.append(option);
+        }
+        select.value = 'custom';
+        applySource();
+        dialog.close();
+      });
     </script>
   </body>
 </html>
